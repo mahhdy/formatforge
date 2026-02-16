@@ -1,1 +1,1 @@
-﻿""converters package""
+﻿"""FormatForge - Converters Package"""

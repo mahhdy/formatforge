@@ -1,1 +1,4 @@
-﻿""scanner package""
+﻿"""
+FormatForge - Scanner Package
+پکیج اسکنر ورودی
+"""
