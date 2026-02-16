@@ -1,0 +1,54 @@
+﻿# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+
+# Virtual environment
+.venv/
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# LaTeX
+*.aux
+*.log
+*.synctex*
+*.fls
+*.fdb_latexmk
+*.bbl
+*.blg
+*.bcf
+*.run.xml
+*.out
+*.toc
+*.lof
+*.lot
+
+# FormatForge
+config/user_config.yaml
+.formatforge/
+*.temp/
+
+# Test output
+tests/output/
+tests/temp/
+
+# Coverage
+htmlcov/
+.coverage
+coverage.xml

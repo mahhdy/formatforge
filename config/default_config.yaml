@@ -1,0 +1,107 @@
+﻿# ============================================================
+#  FormatForge — تنظیمات پیش‌فرض
+#  Default Configuration
+# ============================================================
+
+general:
+  language: "fa"
+  verbose: false
+  color: true
+  confirm_before_convert: true
+  confirm_before_deploy: true
+  auto_fix_warnings: false
+  temp_dir: "~/.formatforge/temp/"
+  log_dir: "~/.formatforge/logs/"
+  report_file: "~/.formatforge/central_log.yaml"
+
+scanner:
+  max_file_size_mb: 100
+  supported_formats:
+    - latex
+    - html
+    - markdown
+    - docx
+    - pdf
+    - rst
+    - asciidoc
+    - epub
+    - notebook
+  ignore_patterns:
+    - "*.aux"
+    - "*.log"
+    - "*.synctex*"
+    - "*.fls"
+    - "*.fdb_latexmk"
+    - ".git/"
+    - "node_modules/"
+    - "__pycache__/"
+
+metadata:
+  default_author:
+    name: ""
+    email: ""
+  default_lang: "fa"
+  default_dir: "rtl"
+  slug_max_length: 60
+  ai_provider: "none"
+  ai_model: ""
+  require_fields:
+    - title
+    - slug
+    - date
+    - lang
+    - dir
+
+conversion:
+  math:
+    engine: "katex"
+    throw_on_error: false
+  diagrams:
+    tikz_to: "svg"
+    tikz_dpi: 300
+    mermaid_to: "component"
+    mermaid_theme: "base"
+  images:
+    optimize: true
+    convert_to_webp: true
+    max_width: 1200
+    quality: 85
+    svg_optimize: true
+  code:
+    add_line_numbers: false
+    default_language: "text"
+  tables:
+    complex_to_html: true
+    simple_to_markdown: true
+  persian:
+    preserve_zwnj: true
+    fix_arabic_yeh: true
+    fix_arabic_keh: true
+    fix_spacing: true
+    numerals: "keep"
+    quotation_marks: "guillemet"
+  mdx:
+    component_style: "import"
+    mdx_version: 3
+
+testing:
+  run_structural: true
+  run_content: true
+  run_math: true
+  run_persian: true
+  run_links: true
+  run_visual: false
+  min_quality_score: 80
+
+deployment:
+  create_backup: true
+  overwrite_existing: "ask"
+  post_deploy:
+    open_in_editor: false
+    editor_command: "code"
+    git_commit: false
+
+reporting:
+  format: "yaml"
+  keep_history: true
+  max_history: 1000

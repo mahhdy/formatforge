@@ -1,0 +1,31 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "formatforge"
+version = "0.1.0"
+description = "????? ???? ????? ????? ???????? ?? MDX"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.11"
+authors = [{name = "Ali Mohammadi", email = "ali@example.com"}]
+
+dependencies = [
+    "click>=8.1",
+    "rich>=13.7", 
+    "pyyaml>=6.0",
+    "pydantic>=2.5"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.4"
+]
+
+[project.scripts]
+formatforge = "formatforge.cli.__main__:cli"
+
+[tool.hatch.build.targets.wheel]
+packages = ["formatforge"]
