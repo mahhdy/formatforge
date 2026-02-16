@@ -1,274 +1,461 @@
 ﻿"""
-مدل گزارش اسکن — Scan Report Model.
-نتیجه مرحله اسکن و شناسایی ورودی.
+FormatForge - Scan Report Models
+مدل‌های گزارش اسکن ورودی
+
+Models for input scanning results: document info, asset entries,
+warnings, and the full ScanReport.
 """
 
 from __future__ import annotations
 
-from datetime import datetime
+import uuid
+from datetime import datetime, timezone
+from typing import Optional
 
-from pydantic import BaseModel, Field, computed_field
-
-from formatforge.models.enums import (
-    DocumentFormat,
-    DocumentLanguage,
-    DocumentRole,
-    IssueSeverity,
-    StructureType,
-)
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
-# ──────────── مدل‌های فرعی ────────────
+# ─────────────────────────────────────────────
+# Constants / ثابت‌ها
+# ─────────────────────────────────────────────
+
+ZWNJ = "\u200c"
+
+_VALID_INPUT_TYPES = frozenset({
+    "file", "directory", "archive", "url", "clipboard",
+})
+
+_VALID_STRUCTURES = frozenset({
+    "single_doc",
+    "independent_articles",
+    "multi_chapter_book",
+    "related_collection",
+})
+
+_VALID_FORMATS = frozenset({
+    "latex", "markdown", "html", "docx", "pdf",
+    "rst", "adoc", "ipynb", "epub", "unknown",
+})
+
+_VALID_ENCODINGS = frozenset({
+    "utf-8", "utf-8-bom", "utf-16", "utf-16-le", "utf-16-be",
+    "windows-1256", "iso-8859-6", "ascii", "unknown",
+})
+
+_VALID_LANGUAGES = frozenset({
+    "fa", "en", "fa+en", "unknown",
+})
+
+_VALID_ROLES = frozenset({
+    "main_entry", "chapter", "appendix", "standalone",
+    "preface", "bibliography", "index", "unknown",
+})
+
+_VALID_WARNING_LEVELS = frozenset({
+    "info", "warning", "error", "critical",
+})
+
+_VALID_ASSET_CATEGORIES = frozenset({
+    "image/png", "image/jpeg", "image/svg+xml", "image/gif",
+    "image/webp", "video/mp4", "audio/mp3",
+    "bibliography", "style", "metadata", "font", "other",
+})
 
 
-class EncodingInfo(BaseModel):
-    """اطلاعات encoding فایل — File encoding information."""
+# ─────────────────────────────────────────────
+# Sub-models / مدل‌های فرعی
+# ─────────────────────────────────────────────
 
-    name: str = Field("utf-8", description="نام encoding")
-    has_bom: bool = Field(False, description="آیا BOM دارد")
-    confidence: float = Field(1.0, ge=0.0, le=1.0, description="ضریب اطمینان")
+class ScanWarning(BaseModel):
+    """
+    هشدار اسکن.
+    A single warning/info/error from the scanning process.
+    """
 
-
-class ScanIssue(BaseModel):
-    """مشکل شناسایی‌شده — Detected issue during scanning."""
-
-    severity: IssueSeverity = Field(..., description="شدت مشکل")
-    file: str = Field("", description="فایل مربوطه")
-    line: int | None = Field(None, description="شماره خط (اختیاری)")
-    message: str = Field(..., description="پیام مشکل")
-    suggestion: str = Field("", description="پیشنهاد اصلاح")
-    auto_fixable: bool = Field(False, description="آیا قابل اصلاح خودکار است")
-
-
-class ImageReference(BaseModel):
-    """ارجاع تصویر — Image reference found in document."""
-
-    path: str = Field(..., description="مسیر تصویر")
-    exists: bool = Field(True, description="آیا فایل وجود دارد")
-    referenced_by: list[str] = Field(default_factory=list, description="فایل‌های ارجاع‌دهنده")
-
-
-class DependencyInfo(BaseModel):
-    """اطلاعات وابستگی — Dependency file information."""
-
-    path: str = Field(..., description="مسیر فایل وابسته")
-    type: str = Field(..., description="نوع وابستگی (input, include, bibliography, image)")
-    exists: bool = Field(True, description="آیا وجود دارد")
-    referenced_by: str = Field("", description="فایل ارجاع‌دهنده")
-
-
-class ScannedDocument(BaseModel):
-    """اطلاعات یک سند اسکن‌شده — Information about a scanned document."""
-
-    id: str = Field(..., description="شناسه منحصربه‌فرد")
-    path: str = Field(..., description="مسیر نسبی فایل")
-    format: DocumentFormat = Field(..., description="فرمت شناسایی‌شده")
-    encoding: EncodingInfo = Field(default_factory=EncodingInfo, description="اطلاعات encoding")
-    language: DocumentLanguage = Field(
-        DocumentLanguage.UNKNOWN,
-        description="زبان شناسایی‌شده",
+    level: str = Field(
+        default="warning",
+        description="سطح هشدار: info | warning | error | critical",
     )
-    role: DocumentRole = Field(DocumentRole.STANDALONE, description="نقش فایل")
-    parent: str | None = Field(None, description="شناسه سند والد (برای فصل‌ها)")
-    size_bytes: int = Field(0, ge=0, description="حجم فایل (بایت)")
-    estimated_pages: int | None = Field(None, description="تعداد تقریبی صفحات")
+    file: Optional[str] = Field(
+        default=None,
+        description="فایل مرتبط با هشدار",
+    )
+    message: str = Field(
+        ...,
+        min_length=1,
+        max_length=1000,
+        description="پیام هشدار",
+    )
+    suggestion: Optional[str] = Field(
+        default=None,
+        max_length=1000,
+        description="پیشنهاد رفع مشکل",
+    )
 
-    # وابستگی‌ها
+    @field_validator("level")
+    @classmethod
+    def validate_level(cls, v: str) -> str:
+        """بررسی سطح هشدار."""
+        v_lower = v.lower().strip()
+        if v_lower not in _VALID_WARNING_LEVELS:
+            raise ValueError(
+                f"سطح هشدار «{v}» نامعتبر. "
+                f"مقادیر مجاز: {sorted(_VALID_WARNING_LEVELS)}"
+            )
+        return v_lower
+
+
+class ScanAssetEntry(BaseModel):
+    """
+    اطلاعات یک فایل وابسته (تصویر، بیب‌تکس و...).
+    An asset file entry in the scan report.
+    """
+
+    path: str = Field(
+        ...,
+        min_length=1,
+        description="مسیر نسبی فایل",
+    )
+    type: str = Field(
+        default="other",
+        description="نوع فایل (MIME-like)",
+    )
+    size_bytes: int = Field(
+        default=0,
+        ge=0,
+        description="حجم فایل به بایت",
+    )
+    referenced_by: list[str] = Field(
+        default_factory=list,
+        description="لیست شناسه اسنادی که به این فایل ارجاع داده‌اند",
+    )
+    entries_count: Optional[int] = Field(
+        default=None,
+        ge=0,
+        description="تعداد ورودی‌ها (مثلاً تعداد مراجع در bib)",
+    )
+
+    @field_validator("type")
+    @classmethod
+    def validate_type(cls, v: str) -> str:
+        """بررسی نوع فایل."""
+        v_lower = v.lower().strip()
+        if v_lower not in _VALID_ASSET_CATEGORIES:
+            # اجازه مقادیر سفارشی ولی با هشدار
+            pass
+        return v_lower
+
+
+class DocumentInfo(BaseModel):
+    """
+    اطلاعات یک سند شناسایی‌شده.
+    Information about a single document found during scanning.
+    """
+
+    id: str = Field(
+        default_factory=lambda: f"doc_{uuid.uuid4().hex[:8]}",
+        description="شناسه یکتای سند",
+    )
+    path: str = Field(
+        ...,
+        min_length=1,
+        description="مسیر نسبی فایل",
+    )
+    format: str = Field(
+        default="unknown",
+        description="فرمت سند: latex | markdown | html | ...",
+    )
+    encoding: str = Field(
+        default="unknown",
+        description="رمزگذاری فایل: utf-8 | utf-8-bom | ...",
+    )
+    language: str = Field(
+        default="unknown",
+        description="زبان سند: fa | en | fa+en | unknown",
+    )
+    role: str = Field(
+        default="standalone",
+        description="نقش سند: main_entry | chapter | appendix | standalone",
+    )
+    parent: Optional[str] = Field(
+        default=None,
+        description="شناسه سند والد (اگر وجود دارد)",
+    )
+    size_bytes: int = Field(
+        default=0,
+        ge=0,
+        description="حجم فایل به بایت",
+    )
+    estimated_pages: Optional[int] = Field(
+        default=None,
+        ge=0,
+        description="تعداد تخمینی صفحات",
+    )
     dependencies: list[str] = Field(
         default_factory=list,
-        description="مسیر فایل‌های include/input شده",
+        description="لیست فایل‌های وابسته (input/include)",
     )
     images_referenced: list[str] = Field(
         default_factory=list,
-        description="مسیر تصاویر ارجاع‌شده",
+        description="لیست تصاویر ارجاع‌داده‌شده",
     )
 
-    # ویژگی‌های محتوا
-    has_math: bool = Field(False, description="شامل فرمول ریاضی")
-    has_code: bool = Field(False, description="شامل بلوک کد")
-    has_tables: bool = Field(False, description="شامل جدول")
-    has_bibliography: bool = Field(False, description="شامل کتاب‌نامه")
-    has_tikz: bool = Field(False, description="شامل نمودار TikZ")
-    has_mermaid: bool = Field(False, description="شامل نمودار Mermaid")
+    # ─── Feature flags ────────────────────────
 
-    # آمار سریع
-    zwnj_count: int = Field(0, ge=0, description="تعداد نیم‌فاصله‌ها")
-    word_count_approx: int = Field(0, ge=0, description="تعداد تقریبی کلمات")
+    has_math: bool = Field(default=False, description="شامل فرمول ریاضی")
+    has_code: bool = Field(default=False, description="شامل بلوک کد")
+    has_tables: bool = Field(default=False, description="شامل جدول")
+    has_bibliography: bool = Field(default=False, description="شامل کتاب‌نامه")
+    has_tikz: bool = Field(default=False, description="شامل نمودار TikZ")
+    has_images: bool = Field(default=False, description="شامل تصویر")
+    has_hyperlinks: bool = Field(default=False, description="شامل لینک")
 
-    @computed_field
-    @property
-    def size_human(self) -> str:
-        """حجم فایل به شکل خوانا"""
-        if self.size_bytes < 1024:
-            return f"{self.size_bytes} B"
-        elif self.size_bytes < 1024 * 1024:
-            return f"{self.size_bytes / 1024:.1f} KB"
-        else:
-            return f"{self.size_bytes / (1024 * 1024):.1f} MB"
+    @field_validator("format")
+    @classmethod
+    def validate_format(cls, v: str) -> str:
+        """بررسی فرمت سند."""
+        v_lower = v.lower().strip()
+        if v_lower not in _VALID_FORMATS:
+            raise ValueError(
+                f"فرمت «{v}» نامعتبر. مقادیر مجاز: {sorted(_VALID_FORMATS)}"
+            )
+        return v_lower
+
+    @field_validator("encoding")
+    @classmethod
+    def validate_encoding(cls, v: str) -> str:
+        """بررسی encoding."""
+        v_lower = v.lower().strip()
+        if v_lower not in _VALID_ENCODINGS:
+            raise ValueError(
+                f"encoding «{v}» نامعتبر. "
+                f"مقادیر مجاز: {sorted(_VALID_ENCODINGS)}"
+            )
+        return v_lower
+
+    @field_validator("language")
+    @classmethod
+    def validate_language(cls, v: str) -> str:
+        """بررسی زبان."""
+        v_lower = v.lower().strip()
+        if v_lower not in _VALID_LANGUAGES:
+            raise ValueError(
+                f"زبان «{v}» نامعتبر. "
+                f"مقادیر مجاز: {sorted(_VALID_LANGUAGES)}"
+            )
+        return v_lower
+
+    @field_validator("role")
+    @classmethod
+    def validate_role(cls, v: str) -> str:
+        """بررسی نقش سند."""
+        v_lower = v.lower().strip()
+        if v_lower not in _VALID_ROLES:
+            raise ValueError(
+                f"نقش «{v}» نامعتبر. مقادیر مجاز: {sorted(_VALID_ROLES)}"
+            )
+        return v_lower
+
+    @model_validator(mode="after")
+    def auto_detect_has_images(self) -> "DocumentInfo":
+        """اگر تصاویر ارجاع شده، has_images را فعال کن."""
+        if self.images_referenced and not self.has_images:
+            self.has_images = True
+        return self
 
 
-class ScannedAsset(BaseModel):
-    """اطلاعات فایل وابسته (تصویر، فونت و...) — Scanned asset file."""
-
-    path: str = Field(..., description="مسیر نسبی")
-    type: str = Field(..., description="MIME type")
-    size_bytes: int = Field(0, ge=0, description="حجم (بایت)")
-    referenced_by: list[str] = Field(
-        default_factory=list,
-        description="شناسه اسنادی که به آن ارجاع دارند",
-    )
-
-
-# ──────────── مدل اصلی ────────────
-
+# ─────────────────────────────────────────────
+# Main Model / مدل اصلی
+# ─────────────────────────────────────────────
 
 class ScanReport(BaseModel):
     """
-    گزارش کامل اسکن — Complete scan report.
-    خروجی مرحله ۱ (Stage 1) خط لوله تبدیل.
+    گزارش کامل اسکن ورودی.
+    Full scan report produced by the input scanner.
     """
 
-    # شناسه و زمان
-    scan_id: str = Field(..., description="شناسه اسکن")
+    scan_id: str = Field(
+        default_factory=lambda: f"scan_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+        description="شناسه یکتای اسکن",
+    )
     timestamp: str = Field(
-        default_factory=lambda: datetime.now().isoformat(),
+        default_factory=lambda: datetime.now(timezone.utc).isoformat(),
         description="زمان اسکن (ISO 8601)",
     )
-
-    # ورودی
-    input_path: str = Field(..., description="مسیر ورودی")
+    input_path: str = Field(
+        ...,
+        min_length=1,
+        description="مسیر ورودی",
+    )
     input_type: str = Field(
-        "file",
-        description="نوع ورودی (file, directory, archive, url, clipboard)",
+        default="file",
+        description="نوع ورودی: file | directory | archive | url | clipboard",
+    )
+    total_files: int = Field(
+        default=0,
+        ge=0,
+        description="تعداد کل فایل‌های یافت‌شده",
+    )
+    structure: str = Field(
+        default="single_doc",
+        description=(
+            "ساختار شناسایی‌شده: single_doc | independent_articles | "
+            "multi_chapter_book | related_collection"
+        ),
     )
 
-    # ساختار
-    structure: StructureType = Field(
-        StructureType.UNKNOWN,
-        description="نوع ساختار شناسایی‌شده",
-    )
+    # ─── اسناد / Documents ───────────────────
 
-    # اسناد و فایل‌ها
-    documents: list[ScannedDocument] = Field(
+    documents: list[DocumentInfo] = Field(
         default_factory=list,
         description="لیست اسناد شناسایی‌شده",
     )
-    assets: list[ScannedAsset] = Field(
+
+    # ─── فایل‌های وابسته / Assets ────────────
+
+    assets: list[ScanAssetEntry] = Field(
         default_factory=list,
         description="لیست فایل‌های وابسته",
     )
-    all_dependencies: list[DependencyInfo] = Field(
+
+    # ─── هشدارها / Warnings ──────────────────
+
+    warnings: list[ScanWarning] = Field(
         default_factory=list,
-        description="گراف وابستگی کامل",
+        description="لیست هشدارها",
     )
 
-    # مشکلات
-    issues: list[ScanIssue] = Field(
-        default_factory=list,
-        description="مشکلات شناسایی‌شده",
+    # ─── تأیید / Confirmation ────────────────
+
+    confirmation_required: bool = Field(
+        default=True,
+        description="آیا تأیید کاربر لازم است",
+    )
+    confirmation_prompt: Optional[str] = Field(
+        default=None,
+        description="متن درخواست تأیید از کاربر",
     )
 
-    # تأیید
-    confirmation_required: bool = Field(True, description="آیا تأیید کاربر لازم است")
+    @field_validator("input_type")
+    @classmethod
+    def validate_input_type(cls, v: str) -> str:
+        """بررسی نوع ورودی."""
+        v_lower = v.lower().strip()
+        if v_lower not in _VALID_INPUT_TYPES:
+            raise ValueError(
+                f"نوع ورودی «{v}» نامعتبر. "
+                f"مقادیر مجاز: {sorted(_VALID_INPUT_TYPES)}"
+            )
+        return v_lower
 
-    # ─── فیلدهای محاسبه‌ای ───
+    @field_validator("structure")
+    @classmethod
+    def validate_structure(cls, v: str) -> str:
+        """بررسی ساختار."""
+        v_lower = v.lower().strip()
+        if v_lower not in _VALID_STRUCTURES:
+            raise ValueError(
+                f"ساختار «{v}» نامعتبر. "
+                f"مقادیر مجاز: {sorted(_VALID_STRUCTURES)}"
+            )
+        return v_lower
 
-    @computed_field
+    # ─── Helpers / متدهای کمکی ───────────────
+
     @property
-    def total_files(self) -> int:
-        """تعداد کل فایل‌ها"""
-        return len(self.documents) + len(self.assets)
-
-    @computed_field
-    @property
-    def total_documents(self) -> int:
-        """تعداد اسناد"""
+    def document_count(self) -> int:
+        """تعداد اسناد."""
         return len(self.documents)
 
-    @computed_field
     @property
-    def total_assets(self) -> int:
-        """تعداد فایل‌های وابسته"""
+    def asset_count(self) -> int:
+        """تعداد فایل‌های وابسته."""
         return len(self.assets)
 
-    @computed_field
-    @property
-    def total_size_bytes(self) -> int:
-        """حجم کل"""
-        doc_size = sum(d.size_bytes for d in self.documents)
-        asset_size = sum(a.size_bytes for a in self.assets)
-        return doc_size + asset_size
-
-    @computed_field
-    @property
-    def error_count(self) -> int:
-        """تعداد خطاها"""
-        return sum(1 for i in self.issues if i.severity == IssueSeverity.ERROR)
-
-    @computed_field
     @property
     def warning_count(self) -> int:
-        """تعداد هشدارها"""
-        return sum(1 for i in self.issues if i.severity == IssueSeverity.WARNING)
+        """تعداد هشدارها."""
+        return len(self.warnings)
 
-    @computed_field
     @property
-    def primary_format(self) -> DocumentFormat:
-        """فرمت اصلی (شایع‌ترین)"""
-        if not self.documents:
-            return DocumentFormat.UNKNOWN
-        formats = [d.format for d in self.documents]
-        return max(set(formats), key=formats.count)
+    def error_count(self) -> int:
+        """تعداد خطاها (سطح error یا critical)."""
+        return sum(
+            1 for w in self.warnings
+            if w.level in ("error", "critical")
+        )
 
-    @computed_field
     @property
-    def primary_language(self) -> DocumentLanguage:
-        """زبان اصلی"""
-        if not self.documents:
-            return DocumentLanguage.UNKNOWN
-        langs = [d.language for d in self.documents if d.language != DocumentLanguage.UNKNOWN]
-        if not langs:
-            return DocumentLanguage.UNKNOWN
-        return max(set(langs), key=langs.count)
+    def has_errors(self) -> bool:
+        """آیا خطای بحرانی وجود دارد."""
+        return self.error_count > 0
 
-    # ─── متدها ───
-
-    def get_document_by_id(self, doc_id: str) -> ScannedDocument | None:
-        """دریافت سند با شناسه"""
+    def get_main_entry(self) -> Optional[DocumentInfo]:
+        """
+        یافتن سند اصلی (نقطه ورود).
+        Find the main entry document.
+        """
         for doc in self.documents:
-            if doc.id == doc_id:
+            if doc.role == "main_entry":
                 return doc
-        return None
-
-    def get_main_document(self) -> ScannedDocument | None:
-        """دریافت سند اصلی (main_entry)"""
+        # اگر main_entry نبود، اولین سند standalone
         for doc in self.documents:
-            if doc.role == DocumentRole.MAIN_ENTRY:
-                return doc
-        # اگر main_entry نبود، اولین standalone
-        for doc in self.documents:
-            if doc.role == DocumentRole.STANDALONE:
+            if doc.role == "standalone":
                 return doc
         return self.documents[0] if self.documents else None
 
-    def get_chapters(self) -> list[ScannedDocument]:
-        """دریافت فصل‌ها (مرتب)"""
-        chapters = [d for d in self.documents if d.role == DocumentRole.CHAPTER]
-        return sorted(chapters, key=lambda d: d.path)
+    def get_chapters(self) -> list[DocumentInfo]:
+        """
+        لیست فصل‌ها به ترتیب.
+        Get chapter documents in order.
+        """
+        return [d for d in self.documents if d.role == "chapter"]
 
-    def get_missing_dependencies(self) -> list[DependencyInfo]:
-        """دریافت وابستگی‌های گمشده"""
-        return [d for d in self.all_dependencies if not d.exists]
+    def get_warnings_for_file(self, file_path: str) -> list[ScanWarning]:
+        """
+        هشدارهای مربوط به یک فایل خاص.
+        Get all warnings related to a specific file.
+        """
+        return [w for w in self.warnings if w.file == file_path]
 
-    def get_auto_fixable_issues(self) -> list[ScanIssue]:
-        """دریافت مشکلات قابل اصلاح خودکار"""
-        return [i for i in self.issues if i.auto_fixable]
+    def generate_confirmation_prompt(self) -> str:
+        """
+        تولید متن تأیید خودکار بر اساس داده‌ها.
+        Generate a user-facing confirmation prompt string.
+        """
+        main = self.get_main_entry()
+        chapters = self.get_chapters()
 
-    def has_critical_issues(self) -> bool:
-        """آیا مشکل بحرانی وجود دارد"""
-        return self.error_count > 0
+        structure_names = {
+            "single_doc": "سند تکی",
+            "independent_articles": "مقالات مستقل",
+            "multi_chapter_book": "کتاب چندفصلی",
+            "related_collection": "مجموعه مرتبط",
+        }
 
-    @classmethod
-    def create(cls, scan_id: str, input_path: str, input_type: str = "file") -> "ScanReport":
-        """ساخت نمونه خالی — Create empty report."""
-        return cls(scan_id=scan_id, input_path=input_path, input_type=input_type)
+        lines = [
+            "\U0001f4c2 ساختار شناسایی\u200cشده:",
+            "\u2501" * 30,
+            f"  نوع: {structure_names.get(self.structure, self.structure)}",
+        ]
+
+        if main:
+            lines.append(f"  فرمت اصلی: {main.format}")
+            lines.append(f"  زبان: {main.language}")
+
+        lines.append(
+            f"  {self.document_count} سند، "
+            f"{self.asset_count} فایل وابسته"
+        )
+
+        if self.warning_count > 0:
+            lines.append(f"  \u26a0 {self.warning_count} هشدار")
+
+        lines.extend([
+            "",
+            "آیا این تشخیص صحیح است؟ [بله/خیر/ویرایش]",
+        ])
+
+        prompt = "\n".join(lines)
+        self.confirmation_prompt = prompt
+        return prompt

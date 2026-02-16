@@ -1,1 +1,6 @@
-﻿"""CLI package — رابط خط فرمان FormatForge"""
+﻿"""
+FormatForge - CLI Package
+پکیج خط فرمان FormatForge
+"""
+
+__all__ = ["app"]

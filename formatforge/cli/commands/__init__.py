@@ -1,1 +1,4 @@
-﻿"""CLI commands package — دستورات خط فرمان"""
+﻿"""
+FormatForge - CLI Commands Package
+پکیج دستورات خط فرمان
+"""

@@ -1,400 +1,420 @@
 ﻿"""
-مدل نتیجه تبدیل — Conversion Result Model.
-خروجی مرحله ۳ (Stage 3) و مراحل بعدی خط لوله.
+FormatForge - Conversion Result Models
+مدل‌های نتیجه تبدیل
+
+Models for tracking conversion output: statistics, quality reports,
+and per-document conversion results.
 """
 
 from __future__ import annotations
 
-from datetime import datetime
+import uuid
+from datetime import datetime, timezone
+from typing import Optional
 
-from pydantic import BaseModel, Field, computed_field
-
-from formatforge.models.enums import (
-    ConversionStatus,
-    DocumentFormat,
-    IssueSeverity,
-    QualityGrade,
-)
-from formatforge.models.metadata import DocumentMetadata
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
-# ──────────── مدل‌های آماری ────────────
+# ─────────────────────────────────────────────
+# Sub-models / مدل‌های فرعی
+# ─────────────────────────────────────────────
 
+class ZWNJReport(BaseModel):
+    """
+    گزارش نیم‌فاصله.
+    Report on ZWNJ preservation during conversion.
+    """
 
-class ElementCounts(BaseModel):
-    """شمارش عناصر سند — Element counts for content comparison."""
-
-    headings: int = Field(0, ge=0, description="تعداد عناوین")
-    paragraphs: int = Field(0, ge=0, description="تعداد پاراگراف‌ها")
-    math_inline: int = Field(0, ge=0, description="تعداد فرمول‌های inline")
-    math_display: int = Field(0, ge=0, description="تعداد فرمول‌های display")
-    images: int = Field(0, ge=0, description="تعداد تصاویر")
-    tables: int = Field(0, ge=0, description="تعداد جداول")
-    code_blocks: int = Field(0, ge=0, description="تعداد بلوک‌های کد")
-    lists: int = Field(0, ge=0, description="تعداد لیست‌ها")
-    footnotes: int = Field(0, ge=0, description="تعداد پانوشت‌ها")
-    citations: int = Field(0, ge=0, description="تعداد ارجاعات")
-    cross_refs: int = Field(0, ge=0, description="تعداد ارجاعات متقاطع")
-    links_internal: int = Field(0, ge=0, description="تعداد لینک‌های داخلی")
-    links_external: int = Field(0, ge=0, description="تعداد لینک‌های خارجی")
-    admonitions: int = Field(0, ge=0, description="تعداد جعبه‌های ویژه")
-    diagrams_tikz: int = Field(0, ge=0, description="تعداد نمودارهای TikZ")
-    diagrams_mermaid: int = Field(0, ge=0, description="تعداد نمودارهای Mermaid")
-    words_approx: int = Field(0, ge=0, description="تعداد تقریبی کلمات")
-    zwnj_count: int = Field(0, ge=0, description="تعداد نیم‌فاصله‌ها")
-
-    @computed_field
-    @property
-    def total_math(self) -> int:
-        """مجموع فرمول‌ها"""
-        return self.math_inline + self.math_display
-
-    @computed_field
-    @property
-    def total_diagrams(self) -> int:
-        """مجموع نمودارها"""
-        return self.diagrams_tikz + self.diagrams_mermaid
-
-    @computed_field
-    @property
-    def total_links(self) -> int:
-        """مجموع لینک‌ها"""
-        return self.links_internal + self.links_external
-
-
-class ConversionStats(BaseModel):
-    """آمار تبدیل — Conversion statistics."""
-
-    source_counts: ElementCounts = Field(
-        default_factory=ElementCounts,
-        description="شمارش عناصر ورودی",
+    count_before: int = Field(
+        default=0, ge=0, description="تعداد ZWNJ قبل از تبدیل"
     )
-    output_counts: ElementCounts = Field(
-        default_factory=ElementCounts,
-        description="شمارش عناصر خروجی",
+    count_after: int = Field(
+        default=0, ge=0, description="تعداد ZWNJ بعد از تبدیل"
     )
-    duration_seconds: float = Field(0.0, ge=0, description="مدت تبدیل (ثانیه)")
-    output_size_bytes: int = Field(0, ge=0, description="حجم خروجی MDX (بایت)")
-    assets_size_bytes: int = Field(0, ge=0, description="حجم فایل‌های وابسته (بایت)")
+    preserved: bool = Field(
+        default=True, description="آیا همه ZWNJ حفظ شده‌اند"
+    )
+    lost_positions: list[int] = Field(
+        default_factory=list,
+        description="موقعیت ZWNJ‌های از دست رفته (شماره خط)",
+    )
 
-    @computed_field
-    @property
-    def total_output_size(self) -> int:
-        """حجم کل خروجی"""
-        return self.output_size_bytes + self.assets_size_bytes
-
-    @computed_field
-    @property
-    def zwnj_preserved(self) -> bool:
-        """آیا نیم‌فاصله‌ها حفظ شده‌اند"""
-        return self.source_counts.zwnj_count == self.output_counts.zwnj_count
-
-    @computed_field
-    @property
-    def zwnj_diff(self) -> int:
-        """اختلاف تعداد نیم‌فاصله"""
-        return self.source_counts.zwnj_count - self.output_counts.zwnj_count
-
-    def element_ratio(self, element: str) -> float:
-        """نسبت عنصر خروجی به ورودی (1.0 = کامل)"""
-        src = getattr(self.source_counts, element, 0)
-        out = getattr(self.output_counts, element, 0)
-        if src == 0:
-            return 1.0 if out == 0 else 0.0
-        return min(out / src, 1.0)
-
-
-# ──────────── مشکلات تبدیل ────────────
-
-
-class ConversionIssue(BaseModel):
-    """مشکل شناسایی‌شده در تبدیل — Issue found during conversion."""
-
-    severity: IssueSeverity = Field(..., description="شدت")
-    stage: str = Field("conversion", description="مرحله (conversion, test, deploy)")
-    source_file: str = Field("", description="فایل مبدأ")
-    source_line: int | None = Field(None, description="خط مبدأ")
-    message: str = Field(..., description="پیام")
-    suggestion: str = Field("", description="پیشنهاد اصلاح")
-    auto_fixed: bool = Field(False, description="آیا خودکار اصلاح شد")
-    element_type: str = Field("", description="نوع عنصر (math, table, image, ...)")
-
-
-# ──────────── فایل خروجی ────────────
-
-
-class OutputFile(BaseModel):
-    """اطلاعات فایل خروجی — Output file information."""
-
-    path: str = Field(..., description="مسیر خروجی")
-    type: str = Field("mdx", description="نوع: mdx, svg, png, webp, json")
-    size_bytes: int = Field(0, ge=0, description="حجم (بایت)")
-    is_main: bool = Field(False, description="آیا فایل MDX اصلی است")
-    source_path: str | None = Field(None, description="مسیر فایل مبدأ")
-
-
-# ──────────── گزارش کیفیت ────────────
+    @model_validator(mode="after")
+    def check_preserved(self) -> "ZWNJReport":
+        """بررسی خودکار حفظ ZWNJ."""
+        self.preserved = self.count_before == self.count_after
+        return self
 
 
 class QualityReport(BaseModel):
-    """گزارش تست کیفیت — Quality test report."""
+    """
+    گزارش کیفیت تبدیل.
+    Quality assessment report for a converted document.
+    """
 
-    # امتیازهای جزئی (هر کدام 0-100)
-    structural_score: int = Field(0, ge=0, le=100, description="امتیاز ساختاری")
-    content_score: int = Field(0, ge=0, le=100, description="امتیاز محتوایی")
-    math_score: int = Field(0, ge=0, le=100, description="امتیاز ریاضی")
-    persian_score: int = Field(0, ge=0, le=100, description="امتیاز فارسی/RTL")
-    link_score: int = Field(0, ge=0, le=100, description="امتیاز لینک‌ها")
-    visual_score: int | None = Field(None, ge=0, le=100, description="امتیاز بصری (اختیاری)")
-
-    # جزئیات
-    tests_passed: int = Field(0, ge=0, description="تعداد تست‌های موفق")
-    tests_failed: int = Field(0, ge=0, description="تعداد تست‌های ناموفق")
-    tests_skipped: int = Field(0, ge=0, description="تعداد تست‌های نادیده‌گرفته‌شده")
-
-    # مشکلات
-    issues: list[ConversionIssue] = Field(
-        default_factory=list,
-        description="مشکلات کیفیتی",
+    score: float = Field(
+        default=0.0,
+        ge=0.0,
+        le=100.0,
+        description="امتیاز کلی کیفیت (۰ تا ۱۰۰)",
     )
 
-    @computed_field
+    # ─── بررسی‌های فارسی / Persian checks ────
+
+    zwnj: ZWNJReport = Field(
+        default_factory=ZWNJReport,
+        description="گزارش نیم‌فاصله",
+    )
+    bidi_correct: bool = Field(
+        default=False,
+        description="آیا جهت‌دهی دوطرفه صحیح است",
+    )
+    persian_chars_normalized: bool = Field(
+        default=False,
+        description="آیا ي و ك به ی و ک تبدیل شده‌اند",
+    )
+    guillemets_used: bool = Field(
+        default=False,
+        description="آیا از گیومه «» استفاده شده",
+    )
+
+    # ─── بررسی‌های محتوایی / Content checks ──
+
+    math_rendered: bool = Field(
+        default=False,
+        description="آیا فرمول‌های ریاضی درست تبدیل شده‌اند",
+    )
+    math_block_count: int = Field(
+        default=0, ge=0, description="تعداد بلوک‌های ریاضی"
+    )
+    math_inline_count: int = Field(
+        default=0, ge=0, description="تعداد فرمول‌های درون‌خطی"
+    )
+    tables_converted: bool = Field(
+        default=False,
+        description="آیا جداول درست تبدیل شده‌اند",
+    )
+    tables_count: int = Field(
+        default=0, ge=0, description="تعداد جداول"
+    )
+    images_linked: bool = Field(
+        default=False,
+        description="آیا تصاویر درست لینک شده‌اند",
+    )
+    images_count: int = Field(
+        default=0, ge=0, description="تعداد تصاویر"
+    )
+    images_missing: list[str] = Field(
+        default_factory=list,
+        description="تصاویر گم‌شده",
+    )
+    code_blocks_count: int = Field(
+        default=0, ge=0, description="تعداد بلوک‌های کد"
+    )
+    headings_count: int = Field(
+        default=0, ge=0, description="تعداد سرتیترها"
+    )
+    links_count: int = Field(
+        default=0, ge=0, description="تعداد لینک‌ها"
+    )
+    links_broken: list[str] = Field(
+        default_factory=list,
+        description="لینک‌های شکسته",
+    )
+
+    # ─── بررسی ساختاری / Structural checks ───
+
+    frontmatter_valid: bool = Field(
+        default=False,
+        description="آیا frontmatter معتبر است",
+    )
+    mdx_valid: bool = Field(
+        default=False,
+        description="آیا خروجی MDX معتبر است (قابل parse)",
+    )
+
+    # ─── خلاصه مشکلات / Issues ───────────────
+
+    issues: list[str] = Field(
+        default_factory=list,
+        description="لیست مشکلات شناسایی‌شده",
+    )
+    suggestions: list[str] = Field(
+        default_factory=list,
+        description="لیست پیشنهادات بهبود",
+    )
+
+    def compute_score(self) -> float:
+        """
+        محاسبه خودکار امتیاز کیفیت.
+        Auto-compute quality score based on checks.
+        """
+        total = 0.0
+        max_score = 0.0
+
+        checks = [
+            (self.zwnj.preserved, 20.0),
+            (self.bidi_correct, 15.0),
+            (self.persian_chars_normalized, 5.0),
+            (self.guillemets_used, 5.0),
+            (self.frontmatter_valid, 10.0),
+            (self.mdx_valid, 15.0),
+            (self.math_rendered, 10.0),
+            (self.tables_converted, 5.0),
+            (self.images_linked, 10.0),
+            (len(self.links_broken) == 0, 5.0),
+        ]
+
+        for passed, weight in checks:
+            max_score += weight
+            if passed:
+                total += weight
+
+        self.score = round((total / max_score) * 100, 1) if max_score > 0 else 0.0
+        return self.score
+
+
+class ConversionStats(BaseModel):
+    """
+    آمار کلی تبدیل.
+    Aggregate statistics for a conversion run.
+    """
+
+    total_documents: int = Field(
+        default=0, ge=0, description="تعداد کل اسناد"
+    )
+    successful: int = Field(
+        default=0, ge=0, description="تعداد تبدیل‌های موفق"
+    )
+    failed: int = Field(
+        default=0, ge=0, description="تعداد تبدیل‌های ناموفق"
+    )
+    skipped: int = Field(
+        default=0, ge=0, description="تعداد اسناد نادیده گرفته‌شده"
+    )
+    warnings_count: int = Field(
+        default=0, ge=0, description="تعداد هشدارها"
+    )
+    duration_seconds: float = Field(
+        default=0.0, ge=0.0, description="مدت زمان کل (ثانیه)"
+    )
+    total_input_bytes: int = Field(
+        default=0, ge=0, description="حجم کل ورودی (بایت)"
+    )
+    total_output_bytes: int = Field(
+        default=0, ge=0, description="حجم کل خروجی (بایت)"
+    )
+    average_quality_score: float = Field(
+        default=0.0, ge=0.0, le=100.0, description="میانگین امتیاز کیفیت"
+    )
+
     @property
-    def total_score(self) -> int:
-        """امتیاز کلی (وزنی) — Weighted total quality score."""
-        # وزن‌ها: ساختاری 25%, محتوا 25%, ریاضی 20%, فارسی 20%, لینک 10%
-        score = (
-            self.structural_score * 0.25
-            + self.content_score * 0.25
-            + self.math_score * 0.20
-            + self.persian_score * 0.20
-            + self.link_score * 0.10
-        )
-        return round(score)
+    def success_rate(self) -> float:
+        """درصد موفقیت."""
+        if self.total_documents == 0:
+            return 0.0
+        return round((self.successful / self.total_documents) * 100, 1)
 
-    @computed_field
     @property
-    def grade(self) -> QualityGrade:
-        """درجه کیفیت"""
-        return QualityGrade.from_score(self.total_score)
+    def all_successful(self) -> bool:
+        """آیا همه تبدیل‌ها موفق بوده‌اند."""
+        return self.failed == 0 and self.successful == self.total_documents
 
-    @computed_field
-    @property
-    def total_tests(self) -> int:
-        """تعداد کل تست‌ها"""
-        return self.tests_passed + self.tests_failed + self.tests_skipped
+    @model_validator(mode="after")
+    def validate_counts(self) -> "ConversionStats":
+        """بررسی سازگاری اعداد."""
+        total = self.successful + self.failed + self.skipped
+        if total > self.total_documents:
+            raise ValueError(
+                f"مجموع موفق ({self.successful}) + ناموفق ({self.failed}) "
+                f"+ نادیده ({self.skipped}) = {total} "
+                f"بیشتر از کل ({self.total_documents}) است."
+            )
+        return self
 
-    def passes_threshold(self, threshold: int = 80) -> bool:
-        """آیا از حد مجاز عبور می‌کند"""
-        return self.total_score >= threshold
+
+class DocumentConversionResult(BaseModel):
+    """
+    نتیجه تبدیل یک سند منفرد.
+    Conversion result for a single document.
+    """
+
+    document_id: str = Field(
+        ..., description="شناسه سند (از ScanReport)"
+    )
+    source_path: str = Field(
+        ..., description="مسیر فایل ورودی"
+    )
+    output_path: Optional[str] = Field(
+        default=None, description="مسیر فایل خروجی MDX"
+    )
+    status: str = Field(
+        default="pending",
+        pattern=r"^(pending|processing|success|failed|skipped)$",
+        description="وضعیت تبدیل",
+    )
+    error_message: Optional[str] = Field(
+        default=None, description="پیام خطا (در صورت شکست)"
+    )
+    quality: QualityReport = Field(
+        default_factory=QualityReport,
+        description="گزارش کیفیت",
+    )
+    duration_seconds: float = Field(
+        default=0.0, ge=0.0, description="مدت زمان تبدیل (ثانیه)"
+    )
+    input_bytes: int = Field(
+        default=0, ge=0, description="حجم ورودی (بایت)"
+    )
+    output_bytes: int = Field(
+        default=0, ge=0, description="حجم خروجی (بایت)"
+    )
+    notes: list[str] = Field(
+        default_factory=list,
+        description="یادداشت‌های تبدیل",
+    )
 
 
-# ──────────── نتیجه تبدیل اصلی ────────────
-
+# ─────────────────────────────────────────────
+# Main Model / مدل اصلی
+# ─────────────────────────────────────────────
 
 class ConversionResult(BaseModel):
     """
-    نتیجه کامل تبدیل یک سند — Complete conversion result for one document.
-    خروجی مرحله ۳ (Stage 3).
+    نتیجه کامل یک فرآیند تبدیل.
+    Full result of a conversion run (one or more documents).
     """
 
-    # شناسه و وضعیت
-    conversion_id: str = Field(..., description="شناسه تبدیل")
-    status: ConversionStatus = Field(..., description="وضعیت تبدیل")
+    conversion_id: str = Field(
+        default_factory=lambda: f"conv_{uuid.uuid4().hex[:12]}",
+        description="شناسه یکتای تبدیل",
+    )
+    scan_id: str = Field(
+        ...,
+        description="شناسه اسکن مرتبط (از ScanReport)",
+    )
     timestamp: str = Field(
-        default_factory=lambda: datetime.now().isoformat(),
-        description="زمان تبدیل",
+        default_factory=lambda: datetime.now(timezone.utc).isoformat(),
+        description="زمان شروع تبدیل (ISO 8601)",
+    )
+    completed_at: Optional[str] = Field(
+        default=None,
+        description="زمان پایان تبدیل (ISO 8601)",
+    )
+    status: str = Field(
+        default="pending",
+        pattern=r"^(pending|processing|completed|partial|failed)$",
+        description="وضعیت کلی: pending | processing | completed | partial | failed",
+    )
+    output_dir: Optional[str] = Field(
+        default=None,
+        description="پوشه خروجی",
     )
 
-    # ورودی
-    source_path: str = Field(..., description="مسیر فایل ورودی")
-    source_format: DocumentFormat = Field(..., description="فرمت ورودی")
+    # ─── نتایج جزئی / Per-document results ──
 
-    # خروجی
-    output_files: list[OutputFile] = Field(
+    documents: list[DocumentConversionResult] = Field(
         default_factory=list,
-        description="فایل‌های خروجی",
-    )
-    mdx_content: str | None = Field(
-        None,
-        description="محتوای MDX تولیدشده (برای تک‌فایل)",
-        exclude=True,  # از سریالایز JSON/YAML مستثنی
+        description="نتایج تبدیل هر سند",
     )
 
-    # متادیتا
-    metadata: DocumentMetadata | None = Field(None, description="متادیتای استخراج‌شده")
+    # ─── آمار / Statistics ───────────────────
 
-    # آمار
     stats: ConversionStats = Field(
         default_factory=ConversionStats,
-        description="آمار تبدیل",
+        description="آمار کلی تبدیل",
     )
 
-    # کیفیت
-    quality: QualityReport | None = Field(None, description="گزارش کیفیت")
+    # ─── یادداشت‌ها / Notes ──────────────────
 
-    # مشکلات
-    issues: list[ConversionIssue] = Field(
+    notes: list[str] = Field(
         default_factory=list,
-        description="مشکلات تبدیل",
+        description="یادداشت‌های کلی فرآیند",
+    )
+    converter_version: str = Field(
+        default="0.1.0",
+        description="نسخه ابزار تبدیل",
     )
 
-    # ─── فیلدهای محاسبه‌ای ───
+    # ─── Helpers / متدهای کمکی ───────────────
 
-    @computed_field
-    @property
-    def is_success(self) -> bool:
-        """آیا تبدیل موفق بود"""
-        return self.status == ConversionStatus.SUCCESS
+    def compute_stats(self) -> ConversionStats:
+        """
+        محاسبه خودکار آمار بر اساس نتایج جزئی.
+        Auto-compute aggregate stats from per-document results.
+        """
+        total = len(self.documents)
+        successful = sum(1 for d in self.documents if d.status == "success")
+        failed = sum(1 for d in self.documents if d.status == "failed")
+        skipped = sum(1 for d in self.documents if d.status == "skipped")
+        warnings_count = sum(len(d.quality.issues) for d in self.documents)
+        duration = sum(d.duration_seconds for d in self.documents)
+        input_bytes = sum(d.input_bytes for d in self.documents)
+        output_bytes = sum(d.output_bytes for d in self.documents)
 
-    @computed_field
-    @property
-    def error_count(self) -> int:
-        """تعداد خطاها"""
-        return sum(1 for i in self.issues if i.severity == IssueSeverity.ERROR)
+        scores = [
+            d.quality.score for d in self.documents if d.status == "success"
+        ]
+        avg_score = round(sum(scores) / len(scores), 1) if scores else 0.0
 
-    @computed_field
-    @property
-    def warning_count(self) -> int:
-        """تعداد هشدارها"""
-        return sum(1 for i in self.issues if i.severity == IssueSeverity.WARNING)
-
-    @computed_field
-    @property
-    def quality_score(self) -> int:
-        """امتیاز کیفیت (0-100)"""
-        if self.quality:
-            return self.quality.total_score
-        return 0
-
-    @computed_field
-    @property
-    def main_output_file(self) -> str | None:
-        """مسیر فایل MDX اصلی"""
-        for f in self.output_files:
-            if f.is_main:
-                return f.path
-        return self.output_files[0].path if self.output_files else None
-
-    # ─── متدها ───
-
-    def add_issue(
-        self,
-        severity: IssueSeverity,
-        message: str,
-        *,
-        source_file: str = "",
-        source_line: int | None = None,
-        suggestion: str = "",
-        auto_fixed: bool = False,
-        element_type: str = "",
-    ) -> None:
-        """اضافه کردن مشکل"""
-        self.issues.append(
-            ConversionIssue(
-                severity=severity,
-                message=message,
-                source_file=source_file,
-                source_line=source_line,
-                suggestion=suggestion,
-                auto_fixed=auto_fixed,
-                element_type=element_type,
-            )
+        self.stats = ConversionStats(
+            total_documents=total,
+            successful=successful,
+            failed=failed,
+            skipped=skipped,
+            warnings_count=warnings_count,
+            duration_seconds=round(duration, 3),
+            total_input_bytes=input_bytes,
+            total_output_bytes=output_bytes,
+            average_quality_score=avg_score,
         )
+        return self.stats
 
-    def add_output_file(
-        self,
-        path: str,
-        type: str = "mdx",
-        size_bytes: int = 0,
-        is_main: bool = False,
-        source_path: str | None = None,
-    ) -> None:
-        """اضافه کردن فایل خروجی"""
-        self.output_files.append(
-            OutputFile(
-                path=path,
-                type=type,
-                size_bytes=size_bytes,
-                is_main=is_main,
-                source_path=source_path,
-            )
-        )
+    def mark_completed(self) -> None:
+        """
+        علامت‌گذاری پایان تبدیل.
+        Mark the conversion as completed and compute stats.
+        """
+        self.completed_at = datetime.now(timezone.utc).isoformat()
+        self.compute_stats()
 
-    @classmethod
-    def create_success(
-        cls,
-        conversion_id: str,
-        source_path: str,
-        source_format: DocumentFormat,
-    ) -> "ConversionResult":
-        """ساخت نتیجه موفق — Create successful result."""
-        return cls(
-            conversion_id=conversion_id,
-            status=ConversionStatus.SUCCESS,
-            source_path=source_path,
-            source_format=source_format,
-        )
+        if self.stats.failed == 0:
+            self.status = "completed"
+        elif self.stats.successful > 0:
+            self.status = "partial"
+        else:
+            self.status = "failed"
 
-    @classmethod
-    def create_failure(
-        cls,
-        conversion_id: str,
-        source_path: str,
-        source_format: DocumentFormat,
-        error_message: str,
-    ) -> "ConversionResult":
-        """ساخت نتیجه ناموفق — Create failed result."""
-        result = cls(
-            conversion_id=conversion_id,
-            status=ConversionStatus.FAILED,
-            source_path=source_path,
-            source_format=source_format,
-        )
-        result.add_issue(IssueSeverity.ERROR, error_message)
-        return result
+    def get_failed_documents(self) -> list[DocumentConversionResult]:
+        """لیست اسناد ناموفق."""
+        return [d for d in self.documents if d.status == "failed"]
 
+    def get_successful_documents(self) -> list[DocumentConversionResult]:
+        """لیست اسناد موفق."""
+        return [d for d in self.documents if d.status == "success"]
 
-# ──────────── نتایج دسته‌ای ────────────
+    def summary(self) -> str:
+        """
+        خلاصه متنی نتیجه تبدیل.
+        Generate a human-readable summary string.
+        """
+        lines = [
+            f"\U0001f4ca نتیجه تبدیل: {self.conversion_id}",
+            "\u2501" * 40,
+            f"  وضعیت:     {self.status}",
+            f"  کل اسناد:  {self.stats.total_documents}",
+            f"  موفق:      {self.stats.successful}",
+            f"  ناموفق:    {self.stats.failed}",
+            f"  نادیده:    {self.stats.skipped}",
+            f"  مدت:       {self.stats.duration_seconds:.1f} ثانیه",
+            f"  کیفیت:     {self.stats.average_quality_score:.1f}/100",
+        ]
 
+        failed = self.get_failed_documents()
+        if failed:
+            lines.append("")
+            lines.append("  \u274c اسناد ناموفق:")
+            for doc in failed:
+                lines.append(f"    - {doc.source_path}: {doc.error_message}")
 
-class BatchConversionResult(BaseModel):
-    """نتیجه تبدیل دسته‌ای — Batch conversion result for multiple documents."""
-
-    batch_id: str = Field(..., description="شناسه دسته")
-    timestamp: str = Field(
-        default_factory=lambda: datetime.now().isoformat(),
-        description="زمان شروع",
-    )
-    results: list[ConversionResult] = Field(
-        default_factory=list,
-        description="نتایج تک‌تک تبدیل‌ها",
-    )
-    total_duration_seconds: float = Field(0.0, ge=0, description="مدت کل")
-
-    @computed_field
-    @property
-    def total(self) -> int:
-        return len(self.results)
-
-    @computed_field
-    @property
-    def success_count(self) -> int:
-        return sum(1 for r in self.results if r.is_success)
-
-    @computed_field
-    @property
-    def failure_count(self) -> int:
-        return sum(1 for r in self.results if r.status == ConversionStatus.FAILED)
-
-    @computed_field
-    @property
-    def avg_quality_score(self) -> int:
-        scores = [r.quality_score for r in self.results if r.quality_score > 0]
-        return round(sum(scores) / len(scores)) if scores else 0
-
-    @computed_field
-    @property
-    def all_zwnj_preserved(self) -> bool:
-        """آیا تمام نیم‌فاصله‌ها در تمام اسناد حفظ شده"""
-        return all(r.stats.zwnj_preserved for r in self.results)
+        return "\n".join(lines)

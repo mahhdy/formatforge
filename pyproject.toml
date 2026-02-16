@@ -5,27 +5,93 @@ build-backend = "hatchling.build"
 [project]
 name = "formatforge"
 version = "0.1.0"
-description = "????? ???? ????? ????? ???????? ?? MDX"
+description = "ابزار جامع تبدیل اسناد چندفرمتی به MDX — با پشتیبانی کامل فارسی"
 readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.11"
-authors = [{name = "Ali Mohammadi", email = "ali@example.com"}]
+authors = [{name = "Mahdi Salem", email = "mahhdy@live.com"}]
+
+keywords = ["mdx", "latex", "markdown", "converter", "persian", "rtl"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Text Processing :: Markup :: LaTeX",
+    "Topic :: Text Processing :: Markup :: HTML",
+    "Topic :: Text Processing :: Markup :: Markdown",
+    "Natural Language :: Persian",
+]
 
 dependencies = [
+    # CLI
     "click>=8.1",
-    "rich>=13.7", 
+    "rich>=13.7",
+    # Data
     "pyyaml>=6.0",
-    "pydantic>=2.5"
+    "pydantic>=2.5",
+    "pydantic-settings>=2.1",
+    # File detection
+    "chardet>=5.2",
+    # Conversion
+    "beautifulsoup4>=4.12",
+    "lxml>=5.1",
+    "python-docx>=1.1",
+    "pymupdf>=1.23",
+    "pylatexenc>=2.10",
+    # Image
+    "pillow>=10.2",
+    # Templates
+    "jinja2>=3.1",
+    # Logging
+    "loguru>=0.7",
 ]
 
 [project.optional-dependencies]
+ai = [
+    "openai>=1.35",
+    "anthropic>=0.30",
+]
+visual = [
+    "playwright>=1.44",
+]
 dev = [
     "pytest>=8.0",
-    "ruff>=0.4"
+    "pytest-cov>=5.0",
+    "pytest-asyncio>=0.23",
+    "ruff>=0.4",
+    "mypy>=1.10",
+    "pre-commit>=3.7",
 ]
+all = ["formatforge[ai,visual,dev]"]
 
 [project.scripts]
 formatforge = "formatforge.cli.__main__:cli"
 
 [tool.hatch.build.targets.wheel]
 packages = ["formatforge"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --tb=short"
+markers = [
+    "slow: marks tests as slow",
+    "e2e: end-to-end tests",
+    "requires_xelatex: requires XeLaTeX installed",
+    "requires_pandoc: requires Pandoc installed",
+    "requires_node: requires Node.js installed",
+]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "SIM"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true

@@ -1,1 +1,25 @@
-﻿
+﻿# FormatForge — پیشرفت توسعه
+# بعد از هر چت بروزرسانی شود
+
+current_sprint: S01
+current_chat: 1
+
+completed:
+  - sprint: S01
+    chat: 1
+    date: ""
+    files:
+      - pyproject.toml
+      - formatforge/__init__.py
+      - formatforge/exceptions.py
+      - formatforge/cli/__main__.py
+      - formatforge/cli/commands/*.py (stubs)
+      - config/default_config.yaml
+      - tests/conftest.py
+    status: "done"
+    notes: "Project structure created"
+
+next:
+  sprint: S01
+  chat: 2
+  target: "Pydantic models (metadata, scan_report, conversion_result)"
