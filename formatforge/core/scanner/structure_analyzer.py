@@ -35,12 +35,21 @@ _MEDIA_EXTENSIONS = frozenset({
     ".mp4", ".webm", ".mp3", ".wav", ".ogg",
 })
 
+_IMAGE_EXTENSIONS = frozenset({
+    ".png", ".jpg", ".jpeg", ".gif", ".svg",
+    ".webp", ".avif", ".bmp",
+})
+
 _STYLE_EXTENSIONS = frozenset({
     ".css", ".scss", ".sty", ".cls", ".bst",
 })
 
 _META_EXTENSIONS = frozenset({
     ".bib", ".json", ".yaml", ".yml", ".toml", ".xml",
+})
+
+_FONT_EXTENSIONS = frozenset({
+    ".ttf", ".otf", ".woff", ".woff2",
 })
 
 _IGNORE_DIRS = frozenset({
@@ -54,13 +63,18 @@ _RE_INCLUDE = re.compile(r"\\include\{([^}]+)\}")
 _RE_BIBLIOGRAPHY = re.compile(r"\\bibliography\{([^}]+)\}")
 _RE_BIBRESOURCE = re.compile(r"\\addbibresource\{([^}]+)\}")
 _RE_GRAPHICSPATH = re.compile(r"\\graphicspath\{([^}]+)\}")
-_RE_INCLUDEGRAPHICS = re.compile(r"\\includegraphics(?:$$[^$$]*\])?\{([^}]+)\}")
-_RE_DOCUMENTCLASS = re.compile(r"\\documentclass(?:$$[^$$]*\])?\{(\w+)\}")
+_RE_INCLUDEGRAPHICS = re.compile(
+    r"\\includegraphics(?:$$[^$$]*\])?\{([^}]+)\}"
+)
+_RE_DOCUMENTCLASS = re.compile(
+    r"\\documentclass(?:$$[^$$]*\])?\{(\w+)\}"
+)
 _RE_BEGIN_DOC = re.compile(r"\\begin\{document\}")
 
-# Markdown patterns
-_RE_MD_IMAGE = re.compile(r"!$$([^$$]*)\]\(([^)]+)\)")
-_RE_MD_LINK = re.compile(r"$$([^$$]+)\]\(([^)]+)\)")
+# Markdown image: ![alt](path)
+_RE_MD_IMAGE = re.compile(r"!$$[^$$]*\]\(([^)]+)\)")
+
+# Markdown frontmatter
 _RE_MD_FRONTMATTER = re.compile(r"^---\s*\n(.*?)\n---", re.DOTALL)
 
 
@@ -70,19 +84,19 @@ _RE_MD_FRONTMATTER = re.compile(r"^---\s*\n(.*?)\n---", re.DOTALL)
 
 @dataclass
 class AssetEntry:
-    """اطلاعات یک فایل وابسته. / Single asset file info."""
+    """اطلاعات یک فایل وابسته."""
     path: str
-    category: str       # image | media | style | metadata | font | other
+    category: str
     size_bytes: int = 0
     referenced_by: list[str] = field(default_factory=list)
 
 
 @dataclass
 class DocInfo:
-    """اطلاعات یک سند. / Single document info."""
+    """اطلاعات یک سند."""
     path: str
     format: str
-    role: str = "standalone"  # main_entry | chapter | appendix | standalone
+    role: str = "standalone"
     parent: Optional[str] = None
     dependencies: list[str] = field(default_factory=list)
     images_referenced: list[str] = field(default_factory=list)
@@ -91,10 +105,7 @@ class DocInfo:
 
 @dataclass
 class LatexProjectInfo:
-    """
-    اطلاعات پروژه LaTeX.
-    LaTeX project analysis: main file, dependencies, bibliography.
-    """
+    """اطلاعات پروژه LaTeX."""
     main_file: Optional[str] = None
     document_class: Optional[str] = None
     chapters: list[str] = field(default_factory=list)
@@ -108,11 +119,8 @@ class LatexProjectInfo:
 
 @dataclass
 class StructureAnalysis:
-    """
-    نتیجه تحلیل ساختار.
-    Complete structure analysis result.
-    """
-    structure_type: str  # single_doc | independent_articles | multi_chapter_book | related_collection
+    """نتیجه تحلیل ساختار."""
+    structure_type: str
     root_path: str
     documents: list[DocInfo] = field(default_factory=list)
     assets: list[AssetEntry] = field(default_factory=list)
@@ -124,23 +132,13 @@ class StructureAnalysis:
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# analyze_directory / تحلیل پوشه
+# analyze_directory
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 def analyze_directory(path: str | Path) -> StructureAnalysis:
     """
     تحلیل ساختار پوشه و تعیین نوع پروژه.
     Analyze a directory to determine project structure.
-
-    Args:
-        path: مسیر پوشه
-
-    Returns:
-        StructureAnalysis شامل نوع ساختار، اسناد و فایل‌ها
-
-    Raises:
-        FileNotFoundError: پوشه وجود ندارد
-        NotADirectoryError: مسیر پوشه نیست
     """
     root = Path(path).resolve()
     if not root.exists():
@@ -148,28 +146,27 @@ def analyze_directory(path: str | Path) -> StructureAnalysis:
     if not root.is_dir():
         raise NotADirectoryError(f"مسیر یک پوشه نیست: {root}")
 
-    # ─── جمع‌آوری فایل‌ها ─────────────────
     all_files = _collect_files(root)
     docs, assets = _categorize_files(root, all_files)
 
-    # ─── تحلیل فرمت غالب ─────────────────
     format_counts: dict[str, int] = {}
     for d in docs:
         format_counts[d.format] = format_counts.get(d.format, 0) + 1
-    primary = max(format_counts, key=format_counts.get) if format_counts else None  # type: ignore[arg-type]
+    primary = (
+        max(format_counts, key=format_counts.get)  # type: ignore
+        if format_counts else None
+    )
 
-    # ─── تحلیل اختصاصی ───────────────────
     latex_info: Optional[LatexProjectInfo] = None
     if primary == "latex":
         latex_info = analyze_latex_project(root)
         docs = _enrich_docs_from_latex(docs, latex_info)
 
-    # ─── تعیین نوع ساختار ────────────────
     structure_type = _determine_structure(docs, latex_info, primary)
 
     logger.info(
-        "تحلیل %s: %d سند, %d asset, نوع=%s, فرمت=%s",
-        root.name, len(docs), len(assets), structure_type, primary,
+        "تحلیل %s: %d سند, %d asset, نوع=%s",
+        root.name, len(docs), len(assets), structure_type,
     )
 
     return StructureAnalysis(
@@ -186,19 +183,13 @@ def analyze_directory(path: str | Path) -> StructureAnalysis:
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# analyze_latex_project / تحلیل پروژه LaTeX
+# analyze_latex_project
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 def analyze_latex_project(path: str | Path) -> LatexProjectInfo:
     """
-    تحلیل پروژه LaTeX: فایل اصلی، وابستگی‌ها، کتاب‌نامه.
-    Analyze a LaTeX project directory.
-
-    Args:
-        path: مسیر پوشه پروژه
-
-    Returns:
-        LatexProjectInfo شامل main file و گراف وابستگی
+    تحلیل پروژه LaTeX.
+    Analyze a LaTeX project: main file, deps, bibliography.
     """
     root = Path(path).resolve()
     info = LatexProjectInfo()
@@ -207,7 +198,7 @@ def analyze_latex_project(path: str | Path) -> LatexProjectInfo:
     if not tex_files:
         return info
 
-    # ─── یافتن فایل اصلی ─────────────────
+    # یافتن فایل اصلی
     for tf in tex_files:
         content = _safe_read(tf)
         if _RE_BEGIN_DOC.search(content):
@@ -217,63 +208,54 @@ def analyze_latex_project(path: str | Path) -> LatexProjectInfo:
                 info.document_class = dc_match.group(1)
                 break
 
-    # Fallback: main.tex
     if not info.main_file:
         for name in ("main.tex", "index.tex", "root.tex"):
-            candidate = root / name
-            if candidate.exists():
+            if (root / name).exists():
                 info.main_file = name
                 break
 
-    # Fallback: first tex with \documentclass
     if not info.main_file and tex_files:
         info.main_file = str(tex_files[0].relative_to(root))
 
-    # ─── تحلیل وابستگی‌ها ────────────────
+    # تحلیل وابستگی‌ها
     for tf in tex_files:
         rel = str(tf.relative_to(root))
         content = _safe_read(tf)
         deps: list[str] = []
 
-        # \input / \include
         for pat in (_RE_INPUT, _RE_INCLUDE):
-            for match in pat.finditer(content):
-                dep = _normalize_tex_path(match.group(1))
+            for m in pat.finditer(content):
+                dep = _normalize_tex_path(m.group(1))
                 deps.append(dep)
                 info.inputs.append(dep)
 
-        # \bibliography / \addbibresource
         for pat in (_RE_BIBLIOGRAPHY, _RE_BIBRESOURCE):
-            for match in pat.finditer(content):
-                bib = match.group(1).strip()
+            for m in pat.finditer(content):
+                bib = m.group(1).strip()
                 if not bib.endswith(".bib"):
                     bib += ".bib"
                 info.bib_files.append(bib)
 
-        # \includegraphics
-        for match in _RE_INCLUDEGRAPHICS.finditer(content):
-            info.images.append(match.group(1).strip())
+        for m in _RE_INCLUDEGRAPHICS.finditer(content):
+            info.images.append(m.group(1).strip())
 
-        # \graphicspath
-        for match in _RE_GRAPHICSPATH.finditer(content):
-            paths = re.findall(r"\{([^}]+)\}", match.group(1))
+        for m in _RE_GRAPHICSPATH.finditer(content):
+            paths = re.findall(r"\{([^}]+)\}", m.group(1))
             info.graphics_paths.extend(paths)
 
         if deps:
             info.dependency_graph[rel] = deps
 
-    # ─── تشخیص فصل‌ها ────────────────────
+    # تشخیص فصل‌ها
     if info.main_file:
         main_content = _safe_read(root / info.main_file)
         for pat in (_RE_INPUT, _RE_INCLUDE):
-            for match in pat.finditer(main_content):
-                ch = _normalize_tex_path(match.group(1))
+            for m in pat.finditer(main_content):
+                ch = _normalize_tex_path(m.group(1))
                 if ch not in info.chapters:
                     info.chapters.append(ch)
 
     info.is_multi_file = len(info.chapters) > 0 or len(info.inputs) > 1
-
-    # deduplicate
     info.bib_files = sorted(set(info.bib_files))
     info.images = sorted(set(info.images))
     info.inputs = sorted(set(info.inputs))
@@ -282,42 +264,38 @@ def analyze_latex_project(path: str | Path) -> LatexProjectInfo:
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# analyze_markdown_collection / تحلیل MD
+# analyze_markdown_collection
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 def analyze_markdown_collection(path: str | Path) -> list[DocInfo]:
     """
     تحلیل مجموعه فایل‌های Markdown.
     Analyze markdown files: frontmatter, images, links.
-
-    Args:
-        path: مسیر پوشه
-
-    Returns:
-        لیست DocInfo برای هر فایل MD
     """
     root = Path(path).resolve()
     docs: list[DocInfo] = []
 
+    md_exts = {".md", ".mdx", ".markdown"}
     md_files = sorted(
         f for f in root.rglob("*")
-        if f.suffix.lower() in (".md", ".mdx", ".markdown") and f.is_file()
+        if f.suffix.lower() in md_exts and f.is_file()
     )
 
     for mf in md_files:
         rel = str(mf.relative_to(root))
         content = _safe_read(mf)
 
-        # استخراج تصاویر با regex مستقیم روی محتوا
-        img_matches = re.findall(r"!$$([^$$]*)\]\(([^)]+)\)", content)
-        images = [match[1] for match in img_matches]
+        # استخراج تصاویر: ![alt](path)
+        image_list = _RE_MD_IMAGE.findall(content)
+
+        # استخراج عنوان
         title = _extract_md_title(content)
 
         docs.append(DocInfo(
             path=rel,
             format="markdown",
             role="standalone",
-            images_referenced=images,
+            images_referenced=image_list,
             title_hint=title,
         ))
 
@@ -325,19 +303,13 @@ def analyze_markdown_collection(path: str | Path) -> list[DocInfo]:
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# find_assets / یافتن فایل‌های وابسته
+# find_assets
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 def find_assets(path: str | Path) -> list[AssetEntry]:
     """
     یافتن فایل‌های وابسته: تصاویر، فونت‌ها، CSS، bib.
     Find all asset files in a directory tree.
-
-    Args:
-        path: مسیر پوشه
-
-    Returns:
-        لیست AssetEntry
     """
     root = Path(path).resolve()
     if not root.is_dir():
@@ -345,8 +317,8 @@ def find_assets(path: str | Path) -> list[AssetEntry]:
 
     assets: list[AssetEntry] = []
     for f in _collect_files(root):
-        cat = _categorize_single_file(f)
-        if cat and cat != "document":
+        cat = _get_asset_category(f)
+        if cat is not None:
             assets.append(AssetEntry(
                 path=str(f.relative_to(root)),
                 category=cat,
@@ -357,11 +329,11 @@ def find_assets(path: str | Path) -> list[AssetEntry]:
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# Internal Helpers / توابع داخلی
+# Internal Helpers
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 def _collect_files(root: Path) -> list[Path]:
-    """جمع‌آوری بازگشتی فایل‌ها با نادیده‌گرفتن پوشه‌های ممنوع."""
+    """جمع‌آوری بازگشتی فایل‌ها."""
     result: list[Path] = []
     for item in sorted(root.rglob("*")):
         if item.is_file() and not any(
@@ -371,20 +343,25 @@ def _collect_files(root: Path) -> list[Path]:
     return result
 
 
-def _categorize_single_file(f: Path) -> Optional[str]:
-    """دسته‌بندی تک فایل."""
+def _get_asset_category(f: Path) -> Optional[str]:
+    """دسته‌بندی فایل وابسته (بدون document)."""
     ext = f.suffix.lower()
-    if ext in _DOC_EXTENSIONS:
-        return "document"
-    if ext in _MEDIA_EXTENSIONS:
-        return "image" if ext in {".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp", ".avif", ".bmp"} else "media"
+    if ext in _IMAGE_EXTENSIONS:
+        return "image"
+    if ext in _MEDIA_EXTENSIONS and ext not in _IMAGE_EXTENSIONS:
+        return "media"
     if ext in _STYLE_EXTENSIONS:
         return "style"
     if ext in _META_EXTENSIONS:
         return "metadata"
-    if ext in (".ttf", ".otf", ".woff", ".woff2"):
+    if ext in _FONT_EXTENSIONS:
         return "font"
     return None
+
+
+def _is_document(f: Path) -> bool:
+    """آیا فایل یک سند است؟"""
+    return f.suffix.lower() in _DOC_EXTENSIONS
 
 
 def _categorize_files(
@@ -396,20 +373,21 @@ def _categorize_files(
 
     for f in files:
         rel = str(f.relative_to(root))
-        cat = _categorize_single_file(f)
 
-        if cat == "document":
+        if _is_document(f):
             try:
                 fmt = detect_format(f)
             except Exception:
                 fmt = "unknown"
             docs.append(DocInfo(path=rel, format=fmt))
-        elif cat:
-            assets.append(AssetEntry(
-                path=rel,
-                category=cat,
-                size_bytes=f.stat().st_size,
-            ))
+        else:
+            cat = _get_asset_category(f)
+            if cat is not None:
+                assets.append(AssetEntry(
+                    path=rel,
+                    category=cat,
+                    size_bytes=f.stat().st_size,
+                ))
 
     return docs, assets
 
@@ -420,25 +398,20 @@ def _determine_structure(
     primary: Optional[str],
 ) -> str:
     """تعیین نوع ساختار پروژه."""
-    if len(docs) == 0:
-        return "single_doc"
-    if len(docs) == 1:
+    if len(docs) <= 1:
         return "single_doc"
 
-    # LaTeX multi-chapter
     if latex_info and latex_info.is_multi_file:
         if latex_info.document_class in ("book", "report", "memoir"):
             return "multi_chapter_book"
         if len(latex_info.chapters) >= 2:
             return "multi_chapter_book"
 
-    # Shared format → independent articles
     if primary:
         same_fmt = sum(1 for d in docs if d.format == primary)
         if same_fmt == len(docs) and len(docs) >= 2:
             return "independent_articles"
 
-    # Mixed formats
     formats = {d.format for d in docs}
     if len(formats) >= 2:
         return "related_collection"
@@ -465,7 +438,7 @@ def _enrich_docs_from_latex(
 
 
 def _normalize_tex_path(raw: str) -> str:
-    """نرمال‌سازی مسیر LaTeX (اضافه کردن .tex اگر ندارد)."""
+    """نرمال‌سازی مسیر LaTeX."""
     p = raw.strip()
     if not Path(p).suffix:
         p += ".tex"
@@ -481,18 +454,16 @@ def _safe_read(path: Path) -> str:
 
 
 def _extract_md_title(content: str) -> Optional[str]:
-    """استخراج عنوان از Markdown (اولین heading یا frontmatter title)."""
-    # frontmatter title
+    """استخراج عنوان از Markdown."""
     fm = _RE_MD_FRONTMATTER.match(content)
     if fm:
         for line in fm.group(1).splitlines():
-            if line.strip().startswith("title:"):
-                return line.split(":", 1)[1].strip().strip("\"'")
+            stripped = line.strip()
+            if stripped.startswith("title:"):
+                return stripped.split(":", 1)[1].strip().strip("\"'")
 
-    # اولین H1
     for line in content.splitlines()[:30]:
         if line.startswith("# ") and not line.startswith("##"):
             return line[2:].strip()
 
     return None
-

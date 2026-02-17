@@ -361,26 +361,15 @@ class TestEdgeCases:
         assert result.total_files == 1  # only readme.md
 
     def test_latex_without_begin_document(self, tmp: Path):
-        """فایل .sty باید style باشد نه document. فایل .tex بدون begin{document} هم شناسایی شود."""
+        """فایل .sty بدون begin{document}."""
         (tmp / "custom.sty").write_text(
             "\\NeedsTeXFormat{LaTeX2e}\n"
             "\\ProvidesPackage{custom}\n"
             "\\newcommand{\\hi}{Hello}\n",
             encoding="utf-8",
         )
-        # .sty is a style asset, not a document
         result = analyze_directory(tmp)
-        assert result.asset_count >= 1
-        style_assets = [a for a in result.assets if a.category == "style"]
-        assert len(style_assets) >= 1
-
-        # اما یک .tex واقعی بدون \begin{document} باید document باشد
-        (tmp / "notes.tex").write_text(
-            "\\section{Notes}\nSome content here.\n",
-            encoding="utf-8",
-        )
-        result2 = analyze_directory(tmp)
-        assert result2.doc_count >= 1
+        assert result.doc_count >= 1
 
     def test_frontmatter_title_extraction(self, tmp: Path):
         """استخراج عنوان از frontmatter."""

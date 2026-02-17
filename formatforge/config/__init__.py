@@ -1,1 +1,4 @@
-﻿""config package""
+﻿"""
+FormatForge - Config Package
+پکیج تنظیمات
+"""
