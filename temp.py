@@ -1,651 +1,772 @@
+# -*- coding: utf-8 -*-
 """
-FormatForge - Link Processor Tests
-تست‌های پردازشگر لینک‌ها و ارجاعات
-
-Tests for:
-- LaTeX href, url conversion
-- ref and cref conversion
-- cite conversion
-- footnote and LTRfootnote conversion
-- HTML anchor conversion
-- Label collection
-- Citation collection
-- Footnote collection
-- Cross-reference resolution
-- ZWNJ preservation
+Writer script: creates tests/test_admonition_processor.py
+and updates __init__.py
+Run: python _write_admonition_tests.py
 """
+import os
+import ast
 
-from __future__ import annotations
+BACKSLASH = chr(92)
+ZWNJ = chr(0x200C)
+DQ = chr(34)
+SQ = chr(39)
+NL = "\n"
+LBRACE = chr(123)
+RBRACE = chr(125)
 
-import pytest
+lines = []
 
-from formatforge.core.processors.link_processor import (
-    LinkProcessor,
-    LabelInfo,
-    FootnoteInfo,
-    LinkStats,
-    collect_labels,
-    collect_citations,
-    collect_footnotes,
-    resolve_cross_references,
-    _label_to_id,
-    _detect_label_type,
-)
-from formatforge.core.processors.base import (
-    ProcessorContext,
-)
-
-ZWNJ = "\u200c"
+def W(line=""):
+    lines.append(line)
 
 
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# ═══════════════════════════════════════════
+# Header
+# ═══════════════════════════════════════════
+W("# -*- coding: utf-8-sig -*-")
+W('r"""Tests for admonition_processor module.')
+W("")
+W("Test suite for FormatForge admonition processing.")
+W('"""')
+W("import pytest")
+W("")
+W("from formatforge.core.processors.admonition_models import (")
+W("    AdmonitionRef,")
+W("    AdmonitionKind,")
+W("    AdmonitionSource,")
+W("    ENVIRONMENT_MAP,")
+W("    MD_CALLOUT_MAP,")
+W("    RST_DIRECTIVE_MAP,")
+W("    HTML_CLASS_MAP,")
+W(")")
+W("from formatforge.core.processors.admonition_processor import AdmonitionProcessor")
+W("")
+W("")
+W("ZWNJ = chr(0x200C)")
+W("BS = chr(92)")
+W("LBRACE = chr(123)")
+W("RBRACE = chr(125)")
+W("")
+W("")
+
+# ═══════════════════════════════════════════
 # Fixtures
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-
-@pytest.fixture
-def processor() -> LinkProcessor:
-    """پردازشگر لینک پیش‌فرض."""
-    return LinkProcessor()
-
-
-@pytest.fixture
-def ctx() -> ProcessorContext:
-    """زمینه پردازش پیش‌فرض."""
-    return ProcessorContext(source_format="latex", language="fa")
-
-
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# Test: href
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-
-class TestHref:
-    r"""تست تبدیل \href."""
-
-    def test_basic_href(
-        self, processor: LinkProcessor, ctx: ProcessorContext,
-    ) -> None:
-        r"""href ساده."""
-        text = r"\href{https://example.com}{کلیک کنید}"
-        result = processor.process(text, ctx)
-        assert "[" in result
-        assert "https://example.com" in result
-        assert r"\href" not in result
-
-    def test_href_output_format(
-        self, processor: LinkProcessor, ctx: ProcessorContext,
-    ) -> None:
-        """خروجی فرمت MDX صحیح."""
-        text = r"\href{https://test.ir}{لینک}"
-        result = processor.process(text, ctx)
-        expected = "[لینک](https://test.ir)"
-        assert expected in result
-
-    def test_multiple_hrefs(
-        self, processor: LinkProcessor, ctx: ProcessorContext,
-    ) -> None:
-        """چند href در یک متن."""
-        text = (
-            r"\href{https://a.com}{اول} "
-            r"و \href{https://b.com}{دوم}"
-        )
-        result = processor.process(text, ctx)
-        assert "[اول](https://a.com)" in result
-        assert "[دوم](https://b.com)" in result
-
-    def test_href_counter(
-        self, processor: LinkProcessor, ctx: ProcessorContext,
-    ) -> None:
-        """شمارنده لینک‌ها."""
-        text = (
-            r"\href{https://a.com}{x} "
-            r"\href{https://b.com}{y}"
-        )
-        processor.process(text, ctx)
-        assert ctx.links_processed >= 2
-
-
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# Test: url
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-
-class TestUrl:
-    r"""تست تبدیل \url."""
-
-    def test_basic_url(
-        self, processor: LinkProcessor, ctx: ProcessorContext,
-    ) -> None:
-        r"""\url{...} → [url](url)."""
-        text = r"\url{https://example.com}"
-        result = processor.process(text, ctx)
-        expected = "[https://example.com](https://example.com)"
-        assert expected in result
-        assert r"\url" not in result
-
-    def test_url_with_path(
-        self, processor: LinkProcessor, ctx: ProcessorContext,
-    ) -> None:
-        """URL با مسیر."""
-        text = r"\url{https://example.com/path/to/page}"
-        result = processor.process(text, ctx)
-        assert "https://example.com/path/to/page" in result
-
-
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# Test: ref
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-
-class TestRef:
-    r"""تست تبدیل \ref."""
-
-    def test_basic_ref(
-        self, processor: LinkProcessor, ctx: ProcessorContext,
-    ) -> None:
-        r"""\ref → لینک داخلی."""
-        text = r"طبق \ref{eq:euler} داریم"
-        result = processor.process(text, ctx)
-        assert "[eq-euler](#eq-euler)" in result
-        assert r"\ref" not in result
-
-    def test_ref_adds_to_labels(
-        self, processor: LinkProcessor, ctx: ProcessorContext,
-    ) -> None:
-        """ref در context.labels ثبت شود."""
-        text = r"\ref{fig:diagram}"
-        processor.process(text, ctx)
-        assert "fig:diagram" in ctx.labels
-
-    def test_ref_id_conversion(
-        self, processor: LinkProcessor, ctx: ProcessorContext,
-    ) -> None:
-        """label با : و _ تبدیل شود."""
-        text = r"\ref{sec:my_section}"
-        result = processor.process(text, ctx)
-        assert "sec-my-section" in result
-
-
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# Test: cref
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-
-class TestCref:
-    r"""تست تبدیل \cref."""
-
-    def test_cref_equation(
-        self, processor: LinkProcessor, ctx: ProcessorContext,
-    ) -> None:
-        """cref با پیشوند eq."""
-        text = r"\cref{eq:gauss}"
-        result = processor.process(text, ctx)
-        assert "معادله" in result
-        assert "eq-gauss" in result
-        assert "#eq-gauss" in result
-
-    def test_cref_figure(
-        self, processor: LinkProcessor, ctx: ProcessorContext,
-    ) -> None:
-        """cref با پیشوند fig."""
-        text = r"\cref{fig:arch}"
-        result = processor.process(text, ctx)
-        assert "شکل" in result
-        assert "fig-arch" in result
-
-    def test_cref_table(
-        self, processor: LinkProcessor, ctx: ProcessorContext,
-    ) -> None:
-        """cref با پیشوند tab."""
-        text = r"\cref{tab:results}"
-        result = processor.process(text, ctx)
-        assert "جدول" in result
-
-    def test_cref_theorem(
-        self, processor: LinkProcessor, ctx: ProcessorContext,
-    ) -> None:
-        """cref با پیشوند thm."""
-        text = r"\cref{thm:demorgan}"
-        result = processor.process(text, ctx)
-        assert "قضیه" in result
-
-    def test_cref_no_prefix(
-        self, processor: LinkProcessor, ctx: ProcessorContext,
-    ) -> None:
-        """cref بدون پیشوند شناخته‌شده."""
-        text = r"\cref{something}"
-        result = processor.process(text, ctx)
-        assert "[something](#something)" in result
-
-
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# Test: cite
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-
-class TestCite:
-    r"""تست تبدیل \cite."""
-
-    def test_basic_cite(
-        self, processor: LinkProcessor, ctx: ProcessorContext,
-    ) -> None:
-        r"""\cite{key} → [^cite-key]."""
-        text = r"\cite{knuth1984}"
-        result = processor.process(text, ctx)
-        assert "[^cite-knuth1984]" in result
-        assert r"\cite" not in result
-
-    def test_cite_multiple_keys(
-        self, processor: LinkProcessor, ctx: ProcessorContext,
-    ) -> None:
-        """چند کلید ارجاع."""
-        text = r"\cite{smith2020,jones2021}"
-        result = processor.process(text, ctx)
-        assert "[^cite-smith2020]" in result
-        assert "[^cite-jones2021]" in result
-
-    def test_cite_with_option(
-        self, processor: LinkProcessor, ctx: ProcessorContext,
-    ) -> None:
-        r"""\cite[p.~42]{key}."""
-        text = r"\cite[p.~42]{book2023}"
-        result = processor.process(text, ctx)
-        assert "[^cite-book2023]" in result
-        assert "p.~42" in result
-
-
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# Test: footnote
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-
-class TestFootnote:
-    r"""تست تبدیل \footnote."""
-
-    def test_basic_footnote(
-        self, processor: LinkProcessor, ctx: ProcessorContext,
-    ) -> None:
-        r"""\footnote → [^fn-N]."""
-        text = r"متن اصلی\footnote{توضیح پانویس} ادامه."
-        result = processor.process(text, ctx)
-        assert "[^fn-1]" in result
-        assert "[^fn-1]: توضیح پانویس" in result
-        assert r"\footnote" not in result
-
-    def test_multiple_footnotes(
-        self, processor: LinkProcessor, ctx: ProcessorContext,
-    ) -> None:
-        """چند پانویس."""
-        text = (
-            r"اول\footnote{اولی} "
-            r"دوم\footnote{دومی}"
-        )
-        result = processor.process(text, ctx)
-        assert "[^fn-1]" in result
-        assert "[^fn-2]" in result
-        assert "[^fn-1]: اولی" in result
-        assert "[^fn-2]: دومی" in result
-
-    def test_footnote_at_end(
-        self, processor: LinkProcessor, ctx: ProcessorContext,
-    ) -> None:
-        """تعاریف پانویس در انتهای خروجی."""
-        text = r"متن\footnote{زیرنویس} ادامه"
-        result = processor.process(text, ctx)
-        lines = result.strip().split("\n")
-        last_nonempty = [l for l in lines if l.strip()][-1]
-        assert last_nonempty.startswith("[^fn-")
-
-    def test_footnote_counter(
-        self, processor: LinkProcessor, ctx: ProcessorContext,
-    ) -> None:
-        """شمارنده پانویس."""
-        text = (
-            r"\footnote{a} \footnote{b} \footnote{c}"
-        )
-        processor.process(text, ctx)
-        assert ctx.footnotes_processed == 3
-
-
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# Test: LTRfootnote
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-
-class TestLTRFootnote:
-    r"""تست تبدیل \LTRfootnote."""
-
-    def test_ltr_footnote(
-        self, processor: LinkProcessor, ctx: ProcessorContext,
-    ) -> None:
-        """LTRfootnote با dir=ltr."""
-        text = r"\LTRfootnote{English note}"
-        result = processor.process(text, ctx)
-        assert "[^fn-1]" in result
-        assert 'dir="ltr"' in result
-        assert "English note" in result
-
-    def test_ltr_footnote_span(
-        self, processor: LinkProcessor, ctx: ProcessorContext,
-    ) -> None:
-        """LTRfootnote درون span."""
-        text = r"\LTRfootnote{See RFC 2119}"
-        result = processor.process(text, ctx)
-        assert "<span" in result
-        assert "</span>" in result
-
-
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# Test: HTML <a> links
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-
-class TestHTMLLinks:
-    """تست تبدیل لینک‌های HTML."""
-
-    def test_basic_html_link(
-        self, processor: LinkProcessor, ctx: ProcessorContext,
-    ) -> None:
-        """HTML anchor ساده."""
-        text = '<a href="https://example.com">کلیک</a>'
-        result = processor.process(text, ctx)
-        assert "[کلیک](https://example.com)" in result
-        assert "<a " not in result
-
-    def test_html_link_with_class(
-        self, processor: LinkProcessor, ctx: ProcessorContext,
-    ) -> None:
-        """HTML anchor با class."""
-        text = (
-            '<a class="ext" href="https://x.com">لینک</a>'
-        )
-        result = processor.process(text, ctx)
-        assert "[لینک](https://x.com)" in result
-
-    def test_empty_text_uses_url(
-        self, processor: LinkProcessor, ctx: ProcessorContext,
-    ) -> None:
-        """متن خالی → URL به عنوان متن."""
-        text = '<a href="https://example.com"></a>'
-        result = processor.process(text, ctx)
-        assert "https://example.com" in result
-
-
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# Test: collect_labels
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-
-class TestCollectLabels:
-    """تست جمع‌آوری label‌ها."""
-
-    def test_basic_labels(self) -> None:
-        """جمع‌آوری label‌های ساده."""
-        text = (
-            r"\label{eq:euler}" "\n"
-            r"\label{fig:diagram}" "\n"
-            r"\label{tab:results}"
-        )
-        labels = collect_labels(text)
-        assert len(labels) == 3
-        assert "eq:euler" in labels
-        assert labels["eq:euler"].label_id == "eq-euler"
-
-    def test_label_type_detection(self) -> None:
-        """تشخیص نوع label."""
-        text = r"\label{thm:main}"
-        labels = collect_labels(text)
-        assert labels["thm:main"].label_type == "قضیه"
-
-    def test_empty_text(self) -> None:
-        """متن خالی."""
-        assert collect_labels("") == {}
-
-
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# Test: collect_citations
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-
-class TestCollectCitations:
-    """تست جمع‌آوری ارجاعات."""
-
-    def test_basic_citations(self) -> None:
-        """جمع‌آوری کلیدهای ارجاع."""
-        text = (
-            r"\cite{smith2020}" "\n"
-            r"\cite{jones2021,brown2022}"
-        )
-        keys = collect_citations(text)
-        assert "smith2020" in keys
-        assert "jones2021" in keys
-        assert "brown2022" in keys
-
-    def test_no_duplicates(self) -> None:
-        """بدون تکرار."""
-        text = r"\cite{key1} \cite{key1}"
-        keys = collect_citations(text)
-        assert keys.count("key1") == 1
-
-    def test_empty(self) -> None:
-        """متن خالی."""
-        assert collect_citations("") == []
-
-
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# Test: collect_footnotes
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-
-class TestCollectFootnotes:
-    """تست جمع‌آوری پانویس‌ها."""
-
-    def test_basic_footnotes(self) -> None:
-        """جمع‌آوری پانویس‌ها."""
-        text = (
-            r"اول\footnote{توضیح اول} "
-            r"دوم\footnote{توضیح دوم}"
-        )
-        fns = collect_footnotes(text)
-        assert len(fns) == 2
-        assert fns[0].text == "توضیح اول"
-        assert fns[1].text == "توضیح دوم"
-
-    def test_ltr_footnote_collected(self) -> None:
-        """LTRfootnote هم جمع شود."""
-        text = r"\LTRfootnote{English text}"
-        fns = collect_footnotes(text)
-        assert len(fns) == 1
-        assert fns[0].is_ltr is True
-
-    def test_mixed_footnotes_ordered(self) -> None:
-        """ترتیب صحیح پانویس‌های مختلط."""
-        text = (
-            r"\footnote{فارسی} "
-            r"\LTRfootnote{English}"
-        )
-        fns = collect_footnotes(text)
-        assert len(fns) == 2
-        assert fns[0].index == 1
-        assert fns[1].index == 2
-
-
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# Test: resolve_cross_references
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-
-class TestResolveCrossReferences:
-    """تست حل ارجاعات متقاطع."""
-
-    def test_resolve_with_known_target(self) -> None:
-        """ارجاع به هدف شناخته‌شده."""
-        content = r"ببینید \ref{eq:main}"
-        labels_map = {
-            "eq:main": "/ch01#eq-main",
-        }
-        result = resolve_cross_references(content, labels_map)
-        assert "[eq-main](/ch01#eq-main)" in result
-
-    def test_resolve_unknown_target(self) -> None:
-        """ارجاع به هدف ناشناخته → anchor محلی."""
-        content = r"\ref{eq:unknown}"
-        result = resolve_cross_references(content, {})
-        assert "[eq-unknown](#eq-unknown)" in result
-
-    def test_resolve_cref_with_type(self) -> None:
-        """cref با نوع فارسی."""
-        content = r"\cref{fig:arch}"
-        labels_map = {"fig:arch": "/ch02#fig-arch"}
-        result = resolve_cross_references(content, labels_map)
-        assert "شکل" in result
-        assert "/ch02#fig-arch" in result
-
-
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# Test: Helper functions
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-
-class TestHelpers:
-    """تست توابع کمکی."""
-
-    def test_label_to_id(self) -> None:
-        """تبدیل label به id."""
-        assert _label_to_id("eq:euler") == "eq-euler"
-        assert _label_to_id("sec:my_part") == "sec-my-part"
-        assert _label_to_id("simple") == "simple"
-
-    def test_detect_label_type_known(self) -> None:
-        """نوع شناخته‌شده."""
-        assert _detect_label_type("eq:test") == "معادله"
-        assert _detect_label_type("fig:test") == "شکل"
-        assert _detect_label_type("tab:test") == "جدول"
-        assert _detect_label_type("thm:test") == "قضیه"
-
-    def test_detect_label_type_unknown(self) -> None:
-        """نوع ناشناخته."""
-        assert _detect_label_type("xyz:test") == ""
-        assert _detect_label_type("nocolon") == ""
-
-
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# Test: ZWNJ Preservation
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-
-class TestZWNJPreservation:
-    """تست حفظ نیم‌فاصله."""
-
-    def test_zwnj_with_href(
-        self, processor: LinkProcessor, ctx: ProcessorContext,
-    ) -> None:
-        """نیم‌فاصله کنار href."""
-        text = (
-            "لینک" + ZWNJ + "های مفید: "
-            + r"\href{https://x.com}{اینجا}"
-        )
-        zwnj_before = text.count(ZWNJ)
-        result = processor.process(text, ctx)
-        assert result.count(ZWNJ) == zwnj_before
-
-    def test_zwnj_with_footnote(
-        self, processor: LinkProcessor, ctx: ProcessorContext,
-    ) -> None:
-        """نیم‌فاصله کنار footnote."""
-        text = (
-            "تعریف" + ZWNJ + "های"
-            + r"\footnote{توضیح" + ZWNJ + "ات}"
-            + " مهم"
-        )
-        zwnj_before = text.count(ZWNJ)
-        result = processor.process(text, ctx)
-        assert result.count(ZWNJ) == zwnj_before
-
-    def test_zwnj_heavy_document(
-        self, processor: LinkProcessor, ctx: ProcessorContext,
-    ) -> None:
-        """سند سنگین با ZWNJ."""
-        text = (
-            "کتاب" + ZWNJ + "خانه"
-            + ZWNJ + "ی "
-            + r"\href{https://lib.ir}{ملی}"
-            + " از مرجع" + ZWNJ + "های "
-            + r"\cite{ref2020}"
-            + " می" + ZWNJ + "باشد."
-        )
-        zwnj_before = text.count(ZWNJ)
-        result = processor.process(text, ctx)
-        assert result.count(ZWNJ) == zwnj_before
-
-
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# Test: can_process
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-
-class TestCanProcess:
-    """تست متد can_process."""
-
-    def test_with_href(
-        self, processor: LinkProcessor, ctx: ProcessorContext,
-    ) -> None:
-        assert processor.can_process(
-            r"\href{x}{y}", ctx,
-        ) is True
-
-    def test_with_cite(
-        self, processor: LinkProcessor, ctx: ProcessorContext,
-    ) -> None:
-        assert processor.can_process(
-            r"\cite{k}", ctx,
-        ) is True
-
-    def test_with_html(
-        self, processor: LinkProcessor, ctx: ProcessorContext,
-    ) -> None:
-        assert processor.can_process(
-            '<a href="x">y</a>', ctx,
-        ) is True
-
-    def test_without_links(
-        self, processor: LinkProcessor, ctx: ProcessorContext,
-    ) -> None:
-        assert processor.can_process(
-            "متن ساده فارسی", ctx,
-        ) is False
-
-    def test_disabled(self, ctx: ProcessorContext) -> None:
-        p = LinkProcessor()
-        p.enabled = False
-        assert p.can_process(r"\href{x}{y}", ctx) is False
-
-
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# Test: Edge Cases
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-
-class TestEdgeCases:
-    """تست موارد مرزی."""
-
-    def test_empty_content(
-        self, processor: LinkProcessor, ctx: ProcessorContext,
-    ) -> None:
-        result = processor.process("", ctx)
-        assert result == ""
-
-    def test_no_links_passthrough(
-        self, processor: LinkProcessor, ctx: ProcessorContext,
-    ) -> None:
-        assert processor.can_process("plain text", ctx) is False
-
-    def test_nested_footnote_braces(
-        self, processor: LinkProcessor, ctx: ProcessorContext,
-    ) -> None:
-        """پانویس با {} تودرتو."""
-        text = r"\footnote{توضیح {مهم} است}"
-        result = processor.process(text, ctx)
-        assert "[^fn-1]" in result
-        assert "توضیح {مهم} است" in result
+# ═══════════════════════════════════════════
+W("@pytest.fixture")
+W("def processor() -> AdmonitionProcessor:")
+W('    r"""Create a default AdmonitionProcessor instance."""')
+W("    return AdmonitionProcessor()")
+W("")
+W("")
+
+# ═══════════════════════════════════════════
+# Test 1: LaTeX environments
+# ═══════════════════════════════════════════
+W("# " + "=" * 60)
+W("# Test 1: LaTeX theorem/definition/proof environments")
+W("# " + "=" * 60)
+W("")
+W("")
+W("class TestLatexEnvironments:")
+W('    r"""Tests for LaTeX environment detection."""')
+W("")
+
+# theorem with title
+W("    def test_theorem_with_title(self, processor: AdmonitionProcessor) -> None:")
+W('        r"""Test parsing theorem environment with optional title."""')
+W("        text = (")
+W("            BS + 'begin' + LBRACE + 'theorem' + RBRACE + '[Pythagorean]'")
+W("            + chr(10)")
+W("            + 'a^2 + b^2 = c^2'")
+W("            + chr(10)")
+W("            + BS + 'end' + LBRACE + 'theorem' + RBRACE")
+W("        )")
+W("        refs = processor.find_admonitions(text, 'latex')")
+W("        assert len(refs) == 1")
+W("        assert refs[0].kind == AdmonitionKind.THEOREM")
+W("        assert refs[0].title == 'Pythagorean'")
+W("        assert 'a^2' in refs[0].body")
+W("        assert refs[0].component == 'Theorem'")
+W("")
+
+# theorem without title
+W("    def test_theorem_without_title(self, processor: AdmonitionProcessor) -> None:")
+W('        r"""Test parsing theorem without optional title."""')
+W("        text = (")
+W("            BS + 'begin' + LBRACE + 'theorem' + RBRACE")
+W("            + chr(10)")
+W("            + 'Some statement.'")
+W("            + chr(10)")
+W("            + BS + 'end' + LBRACE + 'theorem' + RBRACE")
+W("        )")
+W("        refs = processor.find_admonitions(text, 'latex')")
+W("        assert len(refs) == 1")
+W("        assert refs[0].title is None")
+W("        assert 'Some statement.' in refs[0].body")
+W("")
+
+# definition
+W("    def test_definition_env(self, processor: AdmonitionProcessor) -> None:")
+W('        r"""Test parsing definition environment."""')
+W("        text = (")
+W("            BS + 'begin' + LBRACE + 'definition' + RBRACE + '[Group]'")
+W("            + chr(10)")
+W("            + 'A group is a set with an operation.'")
+W("            + chr(10)")
+W("            + BS + 'end' + LBRACE + 'definition' + RBRACE")
+W("        )")
+W("        refs = processor.find_admonitions(text, 'latex')")
+W("        assert len(refs) == 1")
+W("        assert refs[0].kind == AdmonitionKind.DEFINITION")
+W("        assert refs[0].component == 'Definition'")
+W("        assert refs[0].title == 'Group'")
+W("")
+
+# proof
+W("    def test_proof_env(self, processor: AdmonitionProcessor) -> None:")
+W('        r"""Test parsing proof environment."""')
+W("        text = (")
+W("            BS + 'begin' + LBRACE + 'proof' + RBRACE")
+W("            + chr(10)")
+W("            + 'This follows from axiom 1.'")
+W("            + chr(10)")
+W("            + BS + 'end' + LBRACE + 'proof' + RBRACE")
+W("        )")
+W("        refs = processor.find_admonitions(text, 'latex')")
+W("        assert len(refs) == 1")
+W("        assert refs[0].kind == AdmonitionKind.PROOF")
+W("        assert refs[0].component == 'Proof'")
+W("")
+
+# lemma
+W("    def test_lemma_env(self, processor: AdmonitionProcessor) -> None:")
+W('        r"""Test parsing lemma environment."""')
+W("        text = (")
+W("            BS + 'begin' + LBRACE + 'lemma' + RBRACE")
+W("            + chr(10)")
+W("            + 'A useful lemma.'")
+W("            + chr(10)")
+W("            + BS + 'end' + LBRACE + 'lemma' + RBRACE")
+W("        )")
+W("        refs = processor.find_admonitions(text, 'latex')")
+W("        assert len(refs) == 1")
+W("        assert refs[0].kind == AdmonitionKind.LEMMA")
+W("        assert refs[0].component == 'Theorem'")
+W("        assert refs[0].props.get('type') == 'lemma'")
+W("")
+
+# with label
+W("    def test_env_with_label(self, processor: AdmonitionProcessor) -> None:")
+W('        r"""Test parsing environment with label."""')
+W("        text = (")
+W("            BS + 'begin' + LBRACE + 'theorem' + RBRACE + '[Main]'")
+W("            + chr(10)")
+W("            + BS + 'label' + LBRACE + 'thm:main' + RBRACE")
+W("            + chr(10)")
+W("            + 'The main theorem.'")
+W("            + chr(10)")
+W("            + BS + 'end' + LBRACE + 'theorem' + RBRACE")
+W("        )")
+W("        refs = processor.find_admonitions(text, 'latex')")
+W("        assert len(refs) == 1")
+W("        assert refs[0].label == 'thm:main'")
+W("        assert refs[0].title == 'Main'")
+W("        assert 'thm:main' not in refs[0].body")
+W("")
+
+# example
+W("    def test_example_env(self, processor: AdmonitionProcessor) -> None:")
+W('        r"""Test parsing example environment."""')
+W("        text = (")
+W("            BS + 'begin' + LBRACE + 'example' + RBRACE")
+W("            + chr(10)")
+W("            + 'Consider x=1.'")
+W("            + chr(10)")
+W("            + BS + 'end' + LBRACE + 'example' + RBRACE")
+W("        )")
+W("        refs = processor.find_admonitions(text, 'latex')")
+W("        assert len(refs) == 1")
+W("        assert refs[0].kind == AdmonitionKind.EXAMPLE")
+W("        assert refs[0].component == 'Example'")
+W("")
+
+# remark
+W("    def test_remark_env(self, processor: AdmonitionProcessor) -> None:")
+W('        r"""Test parsing remark environment."""')
+W("        text = (")
+W("            BS + 'begin' + LBRACE + 'remark' + RBRACE")
+W("            + chr(10)")
+W("            + 'Note this fact.'")
+W("            + chr(10)")
+W("            + BS + 'end' + LBRACE + 'remark' + RBRACE")
+W("        )")
+W("        refs = processor.find_admonitions(text, 'latex')")
+W("        assert len(refs) == 1")
+W("        assert refs[0].kind == AdmonitionKind.REMARK")
+W("        assert refs[0].component == 'Admonition'")
+W("")
+
+# multiple envs
+W("    def test_multiple_envs(self, processor: AdmonitionProcessor) -> None:")
+W('        r"""Test finding multiple environments in one text."""')
+W("        text = (")
+W("            BS + 'begin' + LBRACE + 'theorem' + RBRACE")
+W("            + chr(10) + 'T1' + chr(10)")
+W("            + BS + 'end' + LBRACE + 'theorem' + RBRACE")
+W("            + chr(10)")
+W("            + BS + 'begin' + LBRACE + 'proof' + RBRACE")
+W("            + chr(10) + 'P1' + chr(10)")
+W("            + BS + 'end' + LBRACE + 'proof' + RBRACE")
+W("        )")
+W("        refs = processor.find_admonitions(text, 'latex')")
+W("        assert len(refs) == 2")
+W("        assert refs[0].kind == AdmonitionKind.THEOREM")
+W("        assert refs[1].kind == AdmonitionKind.PROOF")
+W("")
+W("")
+
+# ═══════════════════════════════════════════
+# Test 2: tcolorbox
+# ═══════════════════════════════════════════
+W("# " + "=" * 60)
+W("# Test 2: tcolorbox")
+W("# " + "=" * 60)
+W("")
+W("")
+W("class TestTcolorbox:")
+W('    r"""Tests for tcolorbox detection."""')
+W("")
+
+W("    def test_tcolorbox_with_title(self, processor: AdmonitionProcessor) -> None:")
+W('        r"""Test parsing tcolorbox with title option."""')
+W("        text = (")
+W("            BS + 'begin' + LBRACE + 'tcolorbox' + RBRACE + '[title=Important Note]'")
+W("            + chr(10)")
+W("            + 'Some important content.'")
+W("            + chr(10)")
+W("            + BS + 'end' + LBRACE + 'tcolorbox' + RBRACE")
+W("        )")
+W("        refs = processor.find_admonitions(text, 'latex')")
+W("        assert len(refs) == 1")
+W("        assert refs[0].title == 'Important Note'")
+W("        assert refs[0].source == AdmonitionSource.LATEX_TCOLORBOX")
+W("")
+
+W("    def test_tcolorbox_red_is_danger(self, processor: AdmonitionProcessor) -> None:")
+W('        r"""Test that red tcolorbox maps to danger."""')
+W("        text = (")
+W("            BS + 'begin' + LBRACE + 'tcolorbox' + RBRACE + '[colback=red!10]'")
+W("            + chr(10)")
+W("            + 'Danger zone.'")
+W("            + chr(10)")
+W("            + BS + 'end' + LBRACE + 'tcolorbox' + RBRACE")
+W("        )")
+W("        refs = processor.find_admonitions(text, 'latex')")
+W("        assert len(refs) == 1")
+W("        assert refs[0].kind == AdmonitionKind.DANGER")
+W("")
+
+W("    def test_tcolorbox_no_options(self, processor: AdmonitionProcessor) -> None:")
+W('        r"""Test tcolorbox without options."""')
+W("        text = (")
+W("            BS + 'begin' + LBRACE + 'tcolorbox' + RBRACE")
+W("            + chr(10)")
+W("            + 'Plain box.'")
+W("            + chr(10)")
+W("            + BS + 'end' + LBRACE + 'tcolorbox' + RBRACE")
+W("        )")
+W("        refs = processor.find_admonitions(text, 'latex')")
+W("        assert len(refs) == 1")
+W("        assert refs[0].kind == AdmonitionKind.NOTE  # default")
+W("")
+
+W("    def test_tcolorbox_with_label(self, processor: AdmonitionProcessor) -> None:")
+W('        r"""Test tcolorbox with label in body."""')
+W("        text = (")
+W("            BS + 'begin' + LBRACE + 'tcolorbox' + RBRACE + '[title=Tip]'")
+W("            + chr(10)")
+W("            + BS + 'label' + LBRACE + 'box:tip1' + RBRACE")
+W("            + chr(10)")
+W("            + 'A useful tip.'")
+W("            + chr(10)")
+W("            + BS + 'end' + LBRACE + 'tcolorbox' + RBRACE")
+W("        )")
+W("        refs = processor.find_admonitions(text, 'latex')")
+W("        assert len(refs) == 1")
+W("        assert refs[0].label == 'box:tip1'")
+W("        assert 'box:tip1' not in refs[0].body")
+W("")
+W("")
+
+# ═══════════════════════════════════════════
+# Test 3: Markdown callouts
+# ═══════════════════════════════════════════
+W("# " + "=" * 60)
+W("# Test 3: Markdown callouts")
+W("# " + "=" * 60)
+W("")
+W("")
+W("class TestMarkdownCallouts:")
+W('    r"""Tests for Markdown callout detection."""')
+W("")
+
+W("    def test_note_callout(self, processor: AdmonitionProcessor) -> None:")
+W('        r"""Test parsing > [!NOTE] callout."""')
+W("        text = (")
+W("            '> [!NOTE]' + chr(10)")
+W("            + '> This is a note.' + chr(10)")
+W("            + '> Second line.'")
+W("        )")
+W("        refs = processor.find_admonitions(text, 'markdown')")
+W("        assert len(refs) == 1")
+W("        assert refs[0].kind == AdmonitionKind.NOTE")
+W("        assert 'This is a note.' in refs[0].body")
+W("        assert 'Second line.' in refs[0].body")
+W("")
+
+W("    def test_warning_callout(self, processor: AdmonitionProcessor) -> None:")
+W('        r"""Test parsing > [!WARNING] callout."""')
+W("        text = (")
+W("            '> [!WARNING] Be careful' + chr(10)")
+W("            + '> Something dangerous.'")
+W("        )")
+W("        refs = processor.find_admonitions(text, 'markdown')")
+W("        assert len(refs) == 1")
+W("        assert refs[0].kind == AdmonitionKind.WARNING")
+W("        assert refs[0].title == 'Be careful'")
+W("")
+
+W("    def test_tip_callout(self, processor: AdmonitionProcessor) -> None:")
+W('        r"""Test parsing > [!TIP] callout."""')
+W("        text = (")
+W("            '> [!TIP]' + chr(10)")
+W("            + '> A handy tip.'")
+W("        )")
+W("        refs = processor.find_admonitions(text, 'markdown')")
+W("        assert len(refs) == 1")
+W("        assert refs[0].kind == AdmonitionKind.TIP")
+W("")
+
+W("    def test_callout_no_body(self, processor: AdmonitionProcessor) -> None:")
+W('        r"""Test callout with only header, no body lines."""')
+W("        text = '> [!INFO] Just a header'")
+W("        refs = processor.find_admonitions(text, 'markdown')")
+W("        assert len(refs) == 1")
+W("        assert refs[0].kind == AdmonitionKind.INFO")
+W("        assert refs[0].title == 'Just a header'")
+W("")
+W("")
+
+# ═══════════════════════════════════════════
+# Test 4: HTML boxes
+# ═══════════════════════════════════════════
+W("# " + "=" * 60)
+W("# Test 4: HTML admonition boxes")
+W("# " + "=" * 60)
+W("")
+W("")
+W("class TestHTMLBoxes:")
+W('    r"""Tests for HTML admonition box detection."""')
+W("")
+
+W("    def test_note_div(self, processor: AdmonitionProcessor) -> None:")
+W('        r"""Test parsing <div class="note">."""')
+W("        text = '<div class=' + chr(34) + 'note' + chr(34) + '>Note content here.</div>'")
+W("        refs = processor.find_admonitions(text, 'html')")
+W("        assert len(refs) == 1")
+W("        assert refs[0].kind == AdmonitionKind.NOTE")
+W("        assert 'Note content here.' in refs[0].body")
+W("")
+
+W("    def test_warning_div(self, processor: AdmonitionProcessor) -> None:")
+W('        r"""Test parsing <div class="warning">."""')
+W("        text = '<div class=' + chr(34) + 'warning' + chr(34) + '>Watch out!</div>'")
+W("        refs = processor.find_admonitions(text, 'html')")
+W("        assert len(refs) == 1")
+W("        assert refs[0].kind == AdmonitionKind.WARNING")
+W("")
+
+W("    def test_unknown_class_defaults_note(self, processor: AdmonitionProcessor) -> None:")
+W('        r"""Test that unknown class defaults to NOTE."""')
+W("        text = '<div class=' + chr(34) + 'custom-box' + chr(34) + '>Content.</div>'")
+W("        refs = processor.find_admonitions(text, 'html')")
+W("        assert len(refs) == 1")
+W("        assert refs[0].kind == AdmonitionKind.NOTE")
+W("")
+W("")
+
+# ═══════════════════════════════════════════
+# Test 5: HTML details/summary
+# ═══════════════════════════════════════════
+W("# " + "=" * 60)
+W("# Test 5: HTML details/summary")
+W("# " + "=" * 60)
+W("")
+W("")
+W("class TestHTMLDetails:")
+W('    r"""Tests for HTML details/summary detection."""')
+W("")
+
+W("    def test_details_with_summary(self, processor: AdmonitionProcessor) -> None:")
+W('        r"""Test parsing <details><summary>."""')
+W("        text = '<details><summary>Click me</summary>Hidden content.</details>'")
+W("        refs = processor.find_admonitions(text, 'html')")
+W("        assert len(refs) == 1")
+W("        assert refs[0].kind == AdmonitionKind.DETAILS")
+W("        assert refs[0].title == 'Click me'")
+W("        assert 'Hidden content.' in refs[0].body")
+W("        assert refs[0].component == 'Details'")
+W("")
+
+W("    def test_details_without_summary(self, processor: AdmonitionProcessor) -> None:")
+W('        r"""Test parsing <details> without <summary>."""')
+W("        text = '<details>Just content.</details>'")
+W("        refs = processor.find_admonitions(text, 'html')")
+W("        assert len(refs) == 1")
+W("        assert refs[0].kind == AdmonitionKind.DETAILS")
+W("        assert refs[0].title is None")
+W("")
+W("")
+
+# ═══════════════════════════════════════════
+# Test 6: RST directives
+# ═══════════════════════════════════════════
+W("# " + "=" * 60)
+W("# Test 6: RST directives")
+W("# " + "=" * 60)
+W("")
+W("")
+W("class TestRSTDirectives:")
+W('    r"""Tests for RST admonition directive detection."""')
+W("")
+
+W("    def test_note_directive(self, processor: AdmonitionProcessor) -> None:")
+W('        r"""Test parsing .. note:: directive."""')
+W("        text = (")
+W("            '.. note:: Important' + chr(10)")
+W("            + '   This is the body.' + chr(10)")
+W("            + '   Second line.'")
+W("        )")
+W("        refs = processor.find_admonitions(text, 'rst')")
+W("        assert len(refs) == 1")
+W("        assert refs[0].kind == AdmonitionKind.NOTE")
+W("        assert refs[0].title == 'Important'")
+W("        assert 'This is the body.' in refs[0].body")
+W("        assert 'Second line.' in refs[0].body")
+W("")
+
+W("    def test_warning_directive(self, processor: AdmonitionProcessor) -> None:")
+W('        r"""Test parsing .. warning:: directive."""')
+W("        text = (")
+W("            '.. warning::' + chr(10)")
+W("            + '   Be careful here.'")
+W("        )")
+W("        refs = processor.find_admonitions(text, 'rst')")
+W("        assert len(refs) == 1")
+W("        assert refs[0].kind == AdmonitionKind.WARNING")
+W("")
+
+W("    def test_tip_directive(self, processor: AdmonitionProcessor) -> None:")
+W('        r"""Test parsing .. tip:: directive."""')
+W("        text = (")
+W("            '.. tip::' + chr(10)")
+W("            + '   A helpful tip.'")
+W("        )")
+W("        refs = processor.find_admonitions(text, 'rst')")
+W("        assert len(refs) == 1")
+W("        assert refs[0].kind == AdmonitionKind.TIP")
+W("")
+W("")
+
+# ═══════════════════════════════════════════
+# Test 7: MDX rendering
+# ═══════════════════════════════════════════
+W("# " + "=" * 60)
+W("# Test 7: MDX rendering")
+W("# " + "=" * 60)
+W("")
+W("")
+W("class TestMDXRendering:")
+W('    r"""Tests for MDX component rendering."""')
+W("")
+
+W("    def test_render_theorem(self, processor: AdmonitionProcessor) -> None:")
+W('        r"""Test rendering theorem as MDX component."""')
+W("        ref = AdmonitionRef(")
+W("            kind=AdmonitionKind.THEOREM,")
+W("            title='Pythagorean',")
+W("            body='a^2 + b^2 = c^2',")
+W("            component='Theorem',")
+W("            props={'type': 'theorem'},")
+W("            label='thm:pyth',")
+W("        )")
+W("        result = processor.render_mdx(ref)")
+W("        assert '<Theorem' in result")
+W("        assert 'Pythagorean' in result")
+W("        assert 'thm:pyth' in result")
+W("        assert 'a^2 + b^2 = c^2' in result")
+W("        assert '</Theorem>' in result")
+W("")
+
+W("    def test_render_admonition_note(self, processor: AdmonitionProcessor) -> None:")
+W('        r"""Test rendering note admonition."""')
+W("        ref = AdmonitionRef(")
+W("            kind=AdmonitionKind.NOTE,")
+W("            body='Remember this.',")
+W("            component='Admonition',")
+W("            props={'type': 'note'},")
+W("        )")
+W("        result = processor.render_mdx(ref)")
+W("        assert '<Admonition' in result")
+W("        assert 'type=' in result")
+W("        assert 'note' in result")
+W("        assert 'Remember this.' in result")
+W("        assert '</Admonition>' in result")
+W("")
+
+W("    def test_render_details(self, processor: AdmonitionProcessor) -> None:")
+W('        r"""Test rendering details component."""')
+W("        ref = AdmonitionRef(")
+W("            kind=AdmonitionKind.DETAILS,")
+W("            title='Click to expand',")
+W("            body='Hidden info.',")
+W("            component='Details',")
+W("        )")
+W("        result = processor.render_mdx(ref)")
+W("        assert '<Details' in result")
+W("        assert 'Click to expand' in result")
+W("        assert 'Hidden info.' in result")
+W("        assert '</Details>' in result")
+W("")
+
+W("    def test_render_without_title(self, processor: AdmonitionProcessor) -> None:")
+W('        r"""Test rendering without title."""')
+W("        ref = AdmonitionRef(")
+W("            body='Just body.',")
+W("            component='Admonition',")
+W("            props={'type': 'note'},")
+W("        )")
+W("        result = processor.render_mdx(ref)")
+W("        assert '<Admonition' in result")
+W("        assert 'title=' not in result")
+W("")
+
+W("    def test_render_empty_body(self, processor: AdmonitionProcessor) -> None:")
+W('        r"""Test rendering with empty body."""')
+W("        ref = AdmonitionRef(")
+W("            component='Admonition',")
+W("            props={'type': 'warning'},")
+W("        )")
+W("        result = processor.render_mdx(ref)")
+W("        assert '<Admonition' in result")
+W("        assert '</Admonition>' in result")
+W("")
+W("")
+
+# ═══════════════════════════════════════════
+# Test 8: Full process (e2e)
+# ═══════════════════════════════════════════
+W("# " + "=" * 60)
+W("# Test 8: Full text processing (e2e)")
+W("# " + "=" * 60)
+W("")
+W("")
+W("class TestFullProcess:")
+W('    r"""End-to-end tests for admonition processing."""')
+W("")
+
+W("    def test_process_latex(self, processor: AdmonitionProcessor) -> None:")
+W('        r"""Test full process on LaTeX theorem."""')
+W("        text = (")
+W("            'Before text.' + chr(10)")
+W("            + BS + 'begin' + LBRACE + 'theorem' + RBRACE + '[Cool]'")
+W("            + chr(10)")
+W("            + 'Statement here.'")
+W("            + chr(10)")
+W("            + BS + 'end' + LBRACE + 'theorem' + RBRACE")
+W("            + chr(10)")
+W("            + 'After text.'")
+W("        )")
+W("        result = processor.process(text, 'latex')")
+W("        assert '<Theorem' in result")
+W("        assert 'Before text.' in result")
+W("        assert 'After text.' in result")
+W("        assert 'Statement here.' in result")
+W("")
+
+W("    def test_process_markdown(self, processor: AdmonitionProcessor) -> None:")
+W('        r"""Test full process on Markdown callout."""')
+W("        text = (")
+W("            'Before.' + chr(10)")
+W("            + '> [!WARNING] Watch out' + chr(10)")
+W("            + '> Be careful.' + chr(10)")
+W("            + 'After.'")
+W("        )")
+W("        result = processor.process(text, 'markdown')")
+W("        assert '<Admonition' in result")
+W("        assert 'warning' in result")
+W("")
+
+W("    def test_process_html(self, processor: AdmonitionProcessor) -> None:")
+W('        r"""Test full process on HTML box."""')
+W("        text = '<p>Before</p><div class=' + chr(34) + 'note' + chr(34) + '>Note body.</div><p>After</p>'")
+W("        result = processor.process(text, 'html')")
+W("        assert '<Admonition' in result")
+W("        assert 'Note body.' in result")
+W("")
+
+W("    def test_process_preserves_unrelated(self, processor: AdmonitionProcessor) -> None:")
+W('        r"""Test that non-admonition text is preserved."""')
+W("        text = 'Just regular text, no admonitions.'")
+W("        result = processor.process(text, 'latex')")
+W("        assert result == text")
+W("")
+W("")
+
+# ═══════════════════════════════════════════
+# Test 9: Persian content
+# ═══════════════════════════════════════════
+W("# " + "=" * 60)
+W("# Test 9: Persian content in admonitions")
+W("# " + "=" * 60)
+W("")
+W("")
+W("class TestPersianAdmonitions:")
+W('    r"""Tests for Persian content in admonitions."""')
+W("")
+
+W("    def test_persian_theorem_title(self, processor: AdmonitionProcessor) -> None:")
+W('        r"""Test Persian title in theorem."""')
+W("        ref = AdmonitionRef(")
+W("            kind=AdmonitionKind.THEOREM,")
+W("            title=" + repr("قضیه فیثاغورس") + ",")
+W("            body='a^2 + b^2 = c^2',")
+W("            component='Theorem',")
+W("            props={'type': 'theorem'},")
+W("        )")
+W("        result = processor.render_mdx(ref)")
+W("        assert " + repr("قضیه فیثاغورس") + " in result")
+W("")
+
+W("    def test_persian_body(self, processor: AdmonitionProcessor) -> None:")
+W('        r"""Test Persian body text."""')
+W("        ref = AdmonitionRef(")
+W("            body=" + repr("این یک نکته مهم است.") + ",")
+W("            component='Admonition',")
+W("            props={'type': 'note'},")
+W("        )")
+W("        result = processor.render_mdx(ref)")
+W("        assert " + repr("این یک نکته مهم است.") + " in result")
+W("")
+
+W("    def test_persian_zwnj_preserved(self, processor: AdmonitionProcessor) -> None:")
+W('        r"""Test ZWNJ preservation in admonition."""')
+W("        body = " + repr("کتاب") + " + ZWNJ + " + repr("خانه"))
+W("        ref = AdmonitionRef(")
+W("            body=body,")
+W("            component='Admonition',")
+W("            props={'type': 'note'},")
+W("        )")
+W("        result = processor.render_mdx(ref)")
+W("        assert ZWNJ in result")
+W("        assert " + repr("کتاب") + " in result")
+W("        assert " + repr("خانه") + " in result")
+W("")
+W("")
+
+# ═══════════════════════════════════════════
+# Test 10: Model and map tests
+# ═══════════════════════════════════════════
+W("# " + "=" * 60)
+W("# Test 10: Models and mappings")
+W("# " + "=" * 60)
+W("")
+W("")
+W("class TestModelsAndMaps:")
+W('    r"""Tests for data models and mapping dictionaries."""')
+W("")
+
+W("    def test_environment_map_completeness(self) -> None:")
+W('        r"""Test that ENVIRONMENT_MAP has expected keys."""')
+W("        for env in ['theorem', 'lemma', 'definition', 'proof', 'example', 'remark']:")
+W("            assert env in ENVIRONMENT_MAP")
+W("")
+
+W("    def test_md_callout_map_completeness(self) -> None:")
+W('        r"""Test that MD_CALLOUT_MAP has expected keys."""')
+W("        for key in ['NOTE', 'WARNING', 'TIP', 'DANGER', 'CAUTION']:")
+W("            assert key in MD_CALLOUT_MAP")
+W("")
+
+W("    def test_rst_directive_map_completeness(self) -> None:")
+W('        r"""Test that RST_DIRECTIVE_MAP has expected keys."""')
+W("        for key in ['note', 'tip', 'warning', 'danger', 'caution']:")
+W("            assert key in RST_DIRECTIVE_MAP")
+W("")
+
+W("    def test_html_class_map_completeness(self) -> None:")
+W('        r"""Test that HTML_CLASS_MAP has expected keys."""')
+W("        for key in ['note', 'warning', 'danger', 'tip']:")
+W("            assert key in HTML_CLASS_MAP")
+W("")
+
+W("    def test_admonition_ref_defaults(self) -> None:")
+W('        r"""Test AdmonitionRef default values."""')
+W("        ref = AdmonitionRef()")
+W("        assert ref.kind == AdmonitionKind.NOTE")
+W("        assert ref.title is None")
+W("        assert ref.body == ''")
+W("        assert ref.component == 'Admonition'")
+W("        assert ref.label is None")
+W("")
+
+
+# ═══════════════════════════════════════════
+# Write file
+# ═══════════════════════════════════════════
+content = NL.join(lines) + NL
+
+os.makedirs("tests", exist_ok=True)
+filepath = os.path.join("tests", "test_admonition_processor.py")
+with open(filepath, "w", encoding="utf-8-sig") as f:
+    f.write(content)
+
+print(f"Written: {filepath} ({len(lines)} lines)")
+
+try:
+    ast.parse(open(filepath, encoding="utf-8-sig").read())
+    print("  Syntax: OK")
+except SyntaxError as e:
+    print(f"  Syntax ERROR line {e.lineno}: {e.msg}")
+
+
+# ═══════════════════════════════════════════
+# Update __init__.py
+# ═══════════════════════════════════════════
+init_path = os.path.join("formatforge", "core", "processors", "__init__.py")
+with open(init_path, "r", encoding="utf-8-sig") as f:
+    init_content = f.read()
+
+if "AdmonitionProcessor" not in init_content:
+    append_lines = [
+        "",
+        "from .admonition_processor import AdmonitionProcessor  # noqa: F401",
+        "from .admonition_models import (  # noqa: F401",
+        "    AdmonitionRef,",
+        "    AdmonitionKind,",
+        "    AdmonitionSource,",
+        "    ENVIRONMENT_MAP,",
+        "    MD_CALLOUT_MAP,",
+        "    RST_DIRECTIVE_MAP,",
+        "    HTML_CLASS_MAP,",
+        ")",
+        "",
+    ]
+    with open(init_path, "a", encoding="utf-8-sig") as f:
+        f.write(NL.join(append_lines))
+    print(f"Updated: {init_path} (appended admonition imports)")
+else:
+    print(f"Skipped: {init_path} (already has AdmonitionProcessor)")
+
+print("\nDone! Run: pytest tests/test_admonition_processor.py -v")

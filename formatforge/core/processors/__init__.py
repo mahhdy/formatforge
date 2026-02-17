@@ -117,3 +117,26 @@ __all__ = [
     "entries_to_json",
     "generate_bibliography_mdx",
 ]
+from .table_processor import TableProcessor  # noqa: F401
+from .table_models import TableModel, TableCell, CellStyle  # noqa: F401
+
+from .image_processor import ImageProcessor  # noqa: F401
+from .image_models import (  # noqa: F401
+    ImageRef,
+    ImageType,
+    ImageSourceFormat,
+    OptimizedImage,
+    AssetMapping,
+    AssetMap,
+)
+
+from .admonition_processor import AdmonitionProcessor  # noqa: F401
+from .admonition_models import (  # noqa: F401
+    AdmonitionRef,
+    AdmonitionKind,
+    AdmonitionSource,
+    ENVIRONMENT_MAP,
+    MD_CALLOUT_MAP,
+    RST_DIRECTIVE_MAP,
+    HTML_CLASS_MAP,
+)
