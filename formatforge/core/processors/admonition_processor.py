@@ -36,13 +36,13 @@ _ENV_NAMES = '|'.join(ENVIRONMENT_MAP.keys())
 RE_LATEX_ENV = re.compile(
     _BS + _BS + r'begin\{(' + _ENV_NAMES + r')\}'
     + r'(.*?)'
-    + _BS + _BS + r'end\{' + _ENV_NAMES + r'\}',
+    + _BS + _BS + r'end\{' + r'\1' + r'\}',
     re.DOTALL,
 )
 
 RE_TCOLORBOX = re.compile(
     _BS + _BS + r'begin\{tcolorbox\}'
-    + r'(?:\$$([^\$$]*)\])?'
+    + r'(?:\[([^\]]*)\])?'
     + r'(.*?)'
     + _BS + _BS + r'end\{tcolorbox\}',
     re.DOTALL,
@@ -53,7 +53,7 @@ RE_LABEL = re.compile(
 )
 
 RE_MD_CALLOUT = re.compile(
-    r'^>\s*\$$!([A-Z]+)\$$\s*(.*?)$',
+    r'^>[ \t]*\[!([A-Z]+)\][ \t]*(.*?)$',
     re.MULTILINE,
 )
 
@@ -134,8 +134,6 @@ class AdmonitionProcessor:
         for match in RE_LATEX_ENV.finditer(text):
             env_name = match.group(1)
             body = match.group(2).strip() if match.group(2) else ''
-            if not body:
-                body = match.group(3).strip() if match.lastindex >= 3 else ''
 
             # Extract [optional title] from start of body
             opt_title = None
@@ -220,9 +218,11 @@ class AdmonitionProcessor:
                 if stripped.startswith('>'):
                     content = stripped[1:].strip()
                     body_lines.append(content)
-                elif stripped == '':
-                    # empty line may end callout
+                elif stripped == '' and body_lines:
+                    # empty line ends callout only if we have body
                     break
+                elif stripped == '':
+                    continue  # skip leading blank lines
                 else:
                     break
 
