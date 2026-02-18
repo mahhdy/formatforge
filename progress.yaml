@@ -1,8 +1,8 @@
-﻿# FormatForge — پیشرفت توسعه
+# FormatForge — پیشرفت توسعه
 # بعد از هر چت بروزرسانی شود
 
-current_sprint: S01
-current_chat: 1
+current_sprint: S06
+current_chat: 3
 
 completed:
   - sprint: S01
@@ -19,7 +19,45 @@ completed:
     status: "done"
     notes: "Project structure created"
 
+  - sprint: S06
+    chat: 1
+    date: "2026-02-17"
+    files:
+      - formatforge/core/converters/md_to_mdx.py
+    status: "done"
+    notes: "MarkdownToMDXConverter — full pipeline: frontmatter, processor pipeline, JSX conversion, ZWNJ preservation"
+
+  - sprint: S06
+    chat: 2
+    date: "2026-02-17"
+    files:
+      - formatforge/core/converters/jsx_utils.py
+    status: "done"
+    notes: "HTML→JSX conversion, import generator, component detection"
+
+  - sprint: S06
+    chat: 3
+    date: "2026-02-17"
+    files:
+      - tests/test_jsx_utils.py
+      - tests/test_md_to_mdx.py
+      - tests/e2e/test_e2e_markdown.py
+    status: "done"
+    notes: "41 jsx_utils tests, 35 md_to_mdx tests, 15 e2e tests — all 838 tests pass"
+
+  - sprint: S05-fix
+    chat: 0
+    date: "2026-02-17"
+    files:
+      - formatforge/core/processors/code_processor.py
+      - formatforge/core/scanner/structure_analyzer.py
+      - formatforge/core/converters/base.py
+      - tests/test_structure_analyzer.py
+      - tests/e2e/__init__.py
+    status: "done"
+    notes: "Fixed 7 failing tests: regex $$ → \\[ corruption, verbatim .strip() whitespace, .sty test fixture"
+
 next:
-  sprint: S01
-  chat: 2
-  target: "Pydantic models (metadata, scan_report, conversion_result)"
+  sprint: S07
+  chat: 1
+  target: "HTML → MDX converter"

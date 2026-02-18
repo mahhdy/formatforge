@@ -32,9 +32,9 @@ formatforge run ./input/ --output ./output/ --target ./website/content/
 ##  وضعیت توسعه
 
 -  S01: زیرساخت ✅
--  S02: اسکنر
--  S03: ماژول فارسی
--  S04-S05: پردازشگرها
+-  S02: اسکنر✅
+-  S03: ماژول فارسی ✅
+-  S04-S05: پردازشگرها ✅
 -  S06: Markdown → MDX
 -  S07: HTML → MDX
 -  S08-S09: LaTeX → MDX

@@ -99,14 +99,14 @@ class CodeStats:
 
 # LaTeX \begin{lstlisting}[opts]...\end{lstlisting}
 RE_LSTLISTING = re.compile(
-    r"\\begin\{lstlisting\}(?:$$([^$$]*)\])?"
+    r"\\begin\{lstlisting\}(?:\[([^\]]*)\])?"
     r"(.*?)\\end\{lstlisting\}",
     re.DOTALL,
 )
 
 # LaTeX \begin{minted}[opts]{lang}...\end{minted}
 RE_MINTED = re.compile(
-    r"\\begin\{minted\}(?:$$([^$$]*)\])?"
+    r"\\begin\{minted\}(?:\[([^\]]*)\])?"
     r"\{(\w+)\}(.*?)\\end\{minted\}",
     re.DOTALL,
 )
@@ -313,7 +313,7 @@ def _build_fence(
         lines.append("")
 
     lines.append("```" + lang + attr_str)
-    lines.append(code.strip())
+    lines.append(code.strip("\n\r"))
     lines.append("```")
 
     return "\n".join(lines)
@@ -530,7 +530,7 @@ class CodeProcessor(BaseProcessor):
         # ۳) LaTeX verbatim
         def _repl_verb_block(m: re.Match) -> str:
             nonlocal block_count
-            code = m.group(1).strip()
+            code = m.group(1).strip("\n\r")
             block_count += 1
             return _build_fence(code, "text")
 

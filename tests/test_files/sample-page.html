@@ -1,0 +1,1567 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>مبانی منطق ریاضی — نمونه تست تبدیل HTML به MDX</title>
+
+  <!-- ===== فونت ===== -->
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css"
+  >
+
+  <!-- ===== KaTeX (ریاضی) ===== -->
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"
+  >
+  <script
+    defer
+    src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"
+  ></script>
+  <script
+    defer
+    src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false},
+        {left: '\\[', right: '\\]', display: true},
+        {left: '\\(', right: '\\)', display: false}
+      ]
+    });"
+  ></script>
+
+  <!-- ===== Mermaid ===== -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'base',
+      themeVariables: {
+        fontFamily: '"Vazirmatn", "Tahoma", sans-serif',
+        fontSize: '14px',
+        primaryColor: '#E3F2FD',
+        primaryTextColor: '#0D47A1',
+        primaryBorderColor: '#1565C0',
+        lineColor: '#1A73E8',
+      },
+      flowchart: { htmlLabels: true, curve: 'basis' },
+      securityLevel: 'loose',
+    });
+  </script>
+
+  <!-- ===== Highlight.js (کد) ===== -->
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github.min.css"
+  >
+  <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
+  <script>hljs.highlightAll();</script>
+
+  <style>
+    /* ========== متغیرهای رنگ ========== */
+    :root {
+      --primary: #1A73E8;
+      --primary-light: #E3F2FD;
+      --accent-teal: #00897B;
+      --accent-teal-light: #E0F2F1;
+      --accent-orange: #FB8C00;
+      --accent-orange-light: #FFF3E0;
+      --text-dark: #212121;
+      --text-gray: #616161;
+      --bg-light: #F5F7FA;
+      --bg-white: #FFFFFF;
+      --border-light: #E0E0E0;
+      --theorem-bg: #E3F2FD;
+      --definition-bg: #E8F5E9;
+      --proof-bg: #FFFDE7;
+      --warning-bg: #FFF3E0;
+      --note-bg: #ECEFF1;
+      --sidebar-gray: #ECEFF1;
+    }
+
+    /* ========== پایه ========== */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Vazirmatn', 'Tahoma', sans-serif;
+      font-size: 16px;
+      line-height: 1.9;
+      color: var(--text-dark);
+      background: var(--bg-light);
+      direction: rtl;
+    }
+
+    /* ========== لِی‌اوت ========== */
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem;
+      background: var(--bg-white);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+
+    /* ========== تیتر‌ها ========== */
+    h1, h2, h3, h4, h5, h6 {
+      color: var(--primary);
+      margin: 1.5em 0 0.5em;
+      line-height: 1.4;
+    }
+    h1 {
+      font-size: 2rem;
+      border-bottom: 3px solid var(--primary);
+      padding-bottom: 0.5rem;
+    }
+    h2 {
+      font-size: 1.5rem;
+      border-bottom: 2px solid var(--primary-light);
+      padding-bottom: 0.3rem;
+    }
+    h3 { font-size: 1.25rem; }
+    h4 { font-size: 1.1rem; color: var(--accent-teal); }
+
+    /* ========== پاراگراف ========== */
+    p { margin: 0.8em 0; }
+
+    /* ========== لینک ========== */
+    a { color: var(--primary); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ========== Bold / Italic ========== */
+    strong { font-weight: 700; }
+    em { font-style: italic; }
+
+    /* ========== کد ========== */
+    code {
+      font-family: 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+      background: var(--bg-light);
+      padding: 0.15em 0.4em;
+      border-radius: 4px;
+      font-size: 0.9em;
+      direction: ltr;
+      unicode-bidi: isolate;
+    }
+
+    pre {
+      direction: ltr;
+      text-align: left;
+      background: var(--bg-light);
+      border: 1px solid var(--border-light);
+      border-radius: 8px;
+      padding: 1rem;
+      overflow-x: auto;
+      margin: 1rem 0;
+    }
+    pre code {
+      background: none;
+      padding: 0;
+      font-size: 0.88em;
+    }
+
+    /* ========== نقل‌قول ========== */
+    blockquote {
+      border-right: 4px solid var(--primary);
+      background: var(--primary-light);
+      padding: 1rem 1.5rem;
+      margin: 1rem 0;
+      border-radius: 0 8px 8px 0;
+    }
+    blockquote blockquote {
+      border-right-color: var(--accent-teal);
+      background: var(--accent-teal-light);
+      margin-top: 0.5rem;
+    }
+
+    /* ========== جدول ========== */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0;
+      direction: rtl;
+    }
+    th, td {
+      border: 1px solid var(--border-light);
+      padding: 0.6rem 0.8rem;
+      text-align: right;
+    }
+    th {
+      background: var(--primary-light);
+      color: var(--primary);
+      font-weight: 700;
+    }
+    tr:nth-child(even) { background: var(--bg-light); }
+    tr:hover { background: #E8EAF6; }
+
+    /* ========== لیست ========== */
+    ul, ol {
+      padding-right: 2em;
+      margin: 0.5em 0;
+    }
+    li { margin: 0.3em 0; }
+
+    /* ========== خط افقی ========== */
+    hr {
+      border: none;
+      height: 2px;
+      background: linear-gradient(to left, var(--primary), var(--accent-teal));
+      margin: 2rem 0;
+      border-radius: 1px;
+    }
+
+    /* ========== تصویر ========== */
+    figure {
+      margin: 1.5rem 0;
+      text-align: center;
+    }
+    figure img {
+      max-width: 100%;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    figcaption {
+      color: var(--text-gray);
+      font-size: 0.9em;
+      margin-top: 0.5rem;
+    }
+
+    /* ========== تصویر کنار متن ========== */
+    .float-start {
+      float: right;
+      margin: 0 0 1rem 1.5rem;
+      max-width: 40%;
+    }
+    .float-end {
+      float: left;
+      margin: 0 1.5rem 1rem 0;
+      max-width: 40%;
+    }
+
+    /* ========== جعبه‌ها ========== */
+    .box {
+      border-radius: 8px;
+      padding: 1rem 1.5rem;
+      margin: 1.5rem 0;
+      border-right: 5px solid;
+    }
+    .box-title {
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      font-size: 1.05em;
+    }
+    .theorem { background: var(--theorem-bg); border-color: var(--primary); }
+    .definition { background: var(--definition-bg); border-color: var(--accent-teal); }
+    .proof { background: var(--proof-bg); border-color: var(--accent-orange); }
+    .warning { background: var(--warning-bg); border-color: var(--accent-orange); }
+    .note { background: var(--note-bg); border-color: #546E7A; }
+    .example { background: #F3E5F5; border-color: #7B1FA2; }
+
+    /* ========== پانوشت ========== */
+    .footnotes {
+      margin-top: 3rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border-light);
+      font-size: 0.9em;
+      color: var(--text-gray);
+    }
+    .footnote-ref { vertical-align: super; font-size: 0.8em; }
+
+    /* ========== فهرست مطالب ========== */
+    .toc {
+      background: var(--sidebar-gray);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+    }
+    .toc h2 { margin-top: 0; border: none; font-size: 1.2rem; }
+    .toc ul { list-style: none; padding-right: 0; }
+    .toc > ul > li { margin: 0.5em 0; }
+    .toc ul ul { padding-right: 1.5em; }
+    .toc a { color: var(--text-dark); }
+    .toc a:hover { color: var(--primary); }
+
+    /* ========== بلوک LTR ========== */
+    .ltr-block {
+      direction: ltr;
+      text-align: left;
+      unicode-bidi: isolate;
+    }
+
+    /* ========== Mermaid ========== */
+    .mermaid {
+      direction: ltr;
+      text-align: center;
+      margin: 1.5rem 0;
+    }
+
+    /* ========== Badge / Tag ========== */
+    .badge {
+      display: inline-block;
+      padding: 0.15em 0.6em;
+      border-radius: 12px;
+      font-size: 0.8em;
+      font-weight: 700;
+      color: white;
+    }
+    .badge-blue { background: var(--primary); }
+    .badge-teal { background: var(--accent-teal); }
+    .badge-orange { background: var(--accent-orange); }
+
+    /* ========== Details / Summary ========== */
+    details {
+      background: var(--bg-light);
+      border: 1px solid var(--border-light);
+      border-radius: 8px;
+      padding: 1rem;
+      margin: 1rem 0;
+    }
+    summary {
+      cursor: pointer;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    details[open] summary { margin-bottom: 0.5rem; }
+
+    /* ========== Keyboard ========== */
+    kbd {
+      background: var(--bg-light);
+      border: 1px solid var(--border-light);
+      border-radius: 4px;
+      padding: 0.1em 0.4em;
+      font-size: 0.85em;
+      font-family: inherit;
+      box-shadow: 0 1px 0 rgba(0,0,0,0.1);
+    }
+
+    /* ========== Mark (هایلایت) ========== */
+    mark {
+      background: #FFF176;
+      padding: 0.1em 0.3em;
+      border-radius: 3px;
+    }
+
+    /* ========== Abbreviation ========== */
+    abbr {
+      text-decoration: underline dotted;
+      cursor: help;
+    }
+
+    /* ========== پاصفحه ========== */
+    footer {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-gray);
+      font-size: 0.85em;
+      border-top: 1px solid var(--border-light);
+      margin-top: 3rem;
+    }
+
+    /* ========== واکنش‌گرا ========== */
+    @media (max-width: 768px) {
+      .container { padding: 1rem; }
+      .float-start, .float-end {
+        float: none;
+        max-width: 100%;
+        margin: 1rem 0;
+      }
+      table { font-size: 0.85em; }
+    }
+
+    /* ========== پرینت ========== */
+    @media print {
+      body { background: white; }
+      .container { box-shadow: none; max-width: 100%; }
+      a { color: var(--text-dark); }
+      a[href]::after { content: " (" attr(href) ")"; font-size: 0.8em; }
+      .mermaid { break-inside: avoid; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+
+    <!-- ==========================================
+         هدر و عنوان
+    ========================================== -->
+    <header style="text-align:center; margin-bottom:2rem;">
+      <h1 style="border:none; font-size:2.2rem;">
+        مبانی منطق ریاضی و اثبات‌های صوری
+      </h1>
+      <p style="color:var(--text-gray); font-size:1.1em;">
+        Foundations of Mathematical Logic and Formal Proofs
+      </p>
+      <p>
+        <span class="badge badge-blue">منطق</span>
+        <span class="badge badge-teal">ریاضی</span>
+        <span class="badge badge-orange">اثبات</span>
+      </p>
+      <p style="color:var(--text-gray);">
+        نویسنده: <strong>مهدی سالم</strong> — تابستان ۱۴۰۴
+      </p>
+    </header>
+
+    <hr>
+
+    <!-- ==========================================
+         فهرست مطالب
+    ========================================== -->
+    <nav class="toc" aria-label="فهرست مطالب">
+      <h2>📑 فهرست مطالب</h2>
+      <ul>
+        <li><a href="#chap1">۱. مقدمه و مفاهیم پایه</a>
+          <ul>
+            <li><a href="#sec-def">۱.۱ تعاریف</a></li>
+            <li><a href="#sec-theorem">۱.۲ قضایا و اثبات</a></li>
+          </ul>
+        </li>
+        <li><a href="#chap2">۲. جدول ارزش و عملگرها</a></li>
+        <li><a href="#chap3">۳. نمودارها</a></li>
+        <li><a href="#chap4">۴. تصاویر و چندرسانه‌ای</a></li>
+        <li><a href="#chap5">۵. کد و الگوریتم</a></li>
+        <li><a href="#chap6">۶. عناصر HTML خاص</a></li>
+        <li><a href="#chap7">۷. محتوای دوزبانه</a></li>
+        <li><a href="#chap8">۸. فرمول‌های پیشرفته</a></li>
+        <li><a href="#chap-footnotes">پانوشت‌ها</a></li>
+        <li><a href="#chap-bib">کتاب‌نامه</a></li>
+      </ul>
+    </nav>
+
+    <hr>
+
+    <!-- ==========================================
+         فصل ۱: مقدمه
+    ========================================== -->
+    <section id="chap1">
+      <h2>۱. مقدمه و مفاهیم پایه</h2>
+
+      <p>
+        این سند به‌عنوان یک <strong>نمونه جامع تست</strong> طراحی شده
+        و شامل تمامی اجزای یک صفحه وب حرفه‌ای فارسی است.
+        هدف آن تست تبدیل <abbr title="HyperText Markup Language">HTML</abbr>
+        به <abbr title="Markdown + JSX">MDX</abbr> می‌باشد.
+      </p>
+
+      <div class="note box">
+        <div class="box-title">📌 نکته</div>
+        تمامی ارجاعات، پانوشت‌ها و کتاب‌نامه این سند
+        صرفاً جهت تست هستند.
+      </div>
+
+      <!-- === تعاریف === -->
+      <h3 id="sec-def">۱.۱ تعاریف</h3>
+
+      <div class="definition box">
+        <div class="box-title">تعریف ۱.۱ — گزاره (Proposition)</div>
+        <p>
+          <strong>گزاره</strong> جمله‌ای خبری است که دقیقاً یکی از
+          دو ارزش «درست» (<span dir="ltr">True, $\top$</span>)
+          یا «نادرست» (<span dir="ltr">False, $\bot$</span>) را دارد.
+        </p>
+      </div>
+
+      <div class="definition box">
+        <div class="box-title">تعریف ۱.۲ — تاتولوژی (Tautology)</div>
+        <p>
+          گزاره مرکب $\varphi$ یک <strong>تاتولوژی</strong> است
+          اگر و تنها اگر تحت هر تخصیص ارزش، مقدار آن درست باشد:
+        </p>
+        $$\models \varphi \iff \forall\, v : v(\varphi) = \top$$
+      </div>
+
+      <!-- === قضیه و اثبات === -->
+      <h3 id="sec-theorem">۱.۲ قضایا و اثبات</h3>
+
+      <div class="theorem box" id="thm-demorgan">
+        <div class="box-title">قضیه ۱.۱ — قانون دمورگان (De Morgan's Laws)</div>
+        <p>برای هر دو گزاره $p$ و $q$:</p>
+        $$\neg(p \land q) \equiv (\neg p) \lor (\neg q)$$
+        $$\neg(p \lor q) \equiv (\neg p) \land (\neg q)$$
+      </div>
+
+      <div class="proof box">
+        <div class="box-title">اثبات قضیه ۱.۱</div>
+        <p>
+          اثبات را با جدول ارزش انجام می‌دهیم. جدول کامل در
+          <a href="#tab-demorgan">جدول ۱</a> آمده است.
+          با بررسی تمامی حالات، ستون‌های مربوطه برابرند. ∎
+        </p>
+      </div>
+
+      <div class="example box">
+        <div class="box-title">مثال ۱.۱ — کاربرد دمورگان</div>
+        <p>
+          فرض کنید $p$: «هوا بارانی است» و $q$: «هوا سرد است».
+          آنگاه:
+        </p>
+        $$\neg(p \land q) \equiv \text{«هوا بارانی نیست \textbf{یا} سرد نیست»}$$
+      </div>
+
+      <div class="theorem box" id="thm-lem">
+        <div class="box-title">قضیه ۱.۲ — اصل طرد شق ثالث</div>
+        <p>
+          برای هر گزاره $p$:
+          $\models p \lor \neg p$
+          <sup><a href="#fn1" class="footnote-ref" id="fnref1">[۱]</a></sup>
+        </p>
+      </div>
+
+      <div class="proof box">
+        <div class="box-title">اثبات قضیه ۱.۲</div>
+        <ul>
+          <li>اگر $p = \top$: $p \lor \neg p = \top \lor \bot = \top$ ✅</li>
+          <li>اگر $p = \bot$: $p \lor \neg p = \bot \lor \top = \top$ ✅</li>
+        </ul>
+        <p>پس در هر دو حالت مقدار درست است. ∎</p>
+      </div>
+    </section>
+
+    <hr>
+
+    <!-- ==========================================
+         فصل ۲: جدول ارزش
+    ========================================== -->
+    <section id="chap2">
+      <h2>۲. جدول ارزش و عملگرها</h2>
+
+      <h3>جدول ارزش دمورگان</h3>
+      <table id="tab-demorgan">
+        <caption>جدول ۱ — جدول ارزش قوانین دمورگان</caption>
+        <thead>
+          <tr>
+            <th>$p$</th>
+            <th>$q$</th>
+            <th>$p \land q$</th>
+            <th>$\neg(p \land q)$</th>
+            <th>$\neg p$</th>
+            <th>$\neg q$</th>
+            <th>$(\neg p)\lor(\neg q)$</th>
+            <th>برابر؟</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>T</td><td>T</td><td>T</td><td><strong>F</strong></td><td>F</td><td>F</td><td><strong>F</strong></td><td>✅</td></tr>
+          <tr><td>T</td><td>F</td><td>F</td><td><strong>T</strong></td><td>F</td><td>T</td><td><strong>T</strong></td><td>✅</td></tr>
+          <tr><td>F</td><td>T</td><td>F</td><td><strong>T</strong></td><td>T</td><td>F</td><td><strong>T</strong></td><td>✅</td></tr>
+          <tr><td>F</td><td>F</td><td>F</td><td><strong>T</strong></td><td>T</td><td>T</td><td><strong>T</strong></td><td>✅</td></tr>
+        </tbody>
+      </table>
+
+      <h3>جدول عملگرهای منطقی</h3>
+      <table>
+        <caption>جدول ۲ — عملگرهای منطقی پایه</caption>
+        <thead>
+          <tr>
+            <th>عملگر</th><th>نماد</th><th>نام انگلیسی</th><th>مثال</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>نقیض</td><td>$\neg$</td><td>Negation</td><td>$\neg p$</td></tr>
+          <tr><td>عطف</td><td>$\land$</td><td>Conjunction</td><td>$p \land q$</td></tr>
+          <tr><td>فصل</td><td>$\lor$</td><td>Disjunction</td><td>$p \lor q$</td></tr>
+          <tr><td>شرطی</td><td>$\to$</td><td>Implication</td><td>$p \to q$</td></tr>
+          <tr><td>دوشرطی</td><td>$\leftrightarrow$</td><td>Biconditional</td><td>$p \leftrightarrow q$</td></tr>
+        </tbody>
+      </table>
+
+      <!-- جدول colSpan و rowSpan -->
+      <h3>جدول با ادغام سلول (colspan / rowspan)</h3>
+      <table>
+        <caption>جدول ۳ — مقایسه سیستم‌های اثبات</caption>
+        <thead>
+          <tr>
+            <th rowspan="2">سیستم</th>
+            <th colspan="2">ویژگی‌ها</th>
+            <th rowspan="2">کاربرد</th>
+          </tr>
+          <tr>
+            <th>تمامیت</th>
+            <th>سازگاری</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>هیلبرت</td><td>✅</td><td>✅</td><td>مبانی نظری</td>
+          </tr>
+          <tr>
+            <td>استنتاج طبیعی</td><td>✅</td><td>✅</td><td>آموزش</td>
+          </tr>
+          <tr>
+            <td>تابلو</td><td>✅</td><td>✅</td><td>اثبات خودکار</td>
+          </tr>
+          <tr>
+            <td>رزولوشن</td><td>✅*</td><td>✅</td><td>SAT Solvers</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="4" style="text-align:center; font-size:0.85em;">
+              *فقط برای فرم نرمال عطفی (CNF)
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+
+      <!-- Definition List -->
+      <h3>واژه‌نامه (Definition List)</h3>
+      <dl>
+        <dt><strong>تاتولوژی</strong> (Tautology)</dt>
+        <dd>گزاره‌ای مرکب که تحت هر تخصیص ارزش، درست است.</dd>
+
+        <dt><strong>تناقض</strong> (Contradiction)</dt>
+        <dd>گزاره‌ای مرکب که تحت هر تخصیص ارزش، نادرست است.</dd>
+
+        <dt><strong>اقناع‌پذیر</strong> (Satisfiable)</dt>
+        <dd>گزاره‌ای مرکب که حداقل یک تخصیص ارزش وجود دارد که آن را درست کند.</dd>
+      </dl>
+    </section>
+
+    <hr>
+
+    <!-- ==========================================
+         فصل ۳: نمودارها (Mermaid)
+    ========================================== -->
+    <section id="chap3">
+      <h2>۳. نمودارها</h2>
+
+      <h3>۳.۱ فلوچارت فارسی</h3>
+      <div class="mermaid">
+        %%{init: {"theme": "base", "themeVariables": {"fontSize": "14px"}, "flowchart": {"htmlLabels": true}}}%%
+        flowchart TD
+          A["🟢 شروع"] --> B["ورودی: فرمول φ"]
+          B --> C{"آیا تاتولوژی است؟"}
+          C -->|"بله ✅"| D["چاپ: تاتولوژی"]
+          C -->|"خیر ❌"| E["چاپ: غیر تاتولوژی"]
+          D --> F["🔴 پایان"]
+          E --> F
+
+          style A fill:#E8F5E9,stroke:#2E7D32,color:#1B5E20
+          style F fill:#FFEBEE,stroke:#C62828,color:#B71C1C
+          style C fill:#FFF3E0,stroke:#EF6C00,color:#E65100
+      </div>
+
+      <h3>۳.۲ نمودار ترتیبی</h3>
+      <div class="mermaid">
+        sequenceDiagram
+          participant U as 👤 کاربر
+          participant P as ⚙️ تجزیه‌گر
+          participant E as 🧮 ارزیاب
+
+          U->>P: ارسال فرمول
+          activate P
+          P->>E: درخت نحوی
+          deactivate P
+          activate E
+          alt تاتولوژی
+            E->>U: ✅ بله
+          else غیر تاتولوژی
+            E->>U: ❌ خیر
+          end
+          deactivate E
+      </div>
+
+      <h3>۳.۳ نمودار کلاسی</h3>
+      <div class="mermaid">
+        classDiagram
+          class Formula {
+            &lt;&lt;abstract&gt;&gt;
+            +evaluate(env) bool
+            +toString() string
+          }
+          class Atom {
+            -name: string
+            +evaluate(env) bool
+          }
+          class Negation {
+            -operand: Formula
+            +evaluate(env) bool
+          }
+          class Conjunction {
+            +evaluate(env) bool
+          }
+          Formula &lt;|-- Atom
+          Formula &lt;|-- Negation
+          Formula &lt;|-- Conjunction
+      </div>
+
+      <h3>۳.۴ نمودار وضعیت</h3>
+      <div class="mermaid">
+        stateDiagram-v2
+          [*] --> Parsing
+          Parsing --> Error: Invalid
+          Error --> Parsing: Retry
+          Parsing --> Evaluating: Valid
+          Evaluating --> Tautology: All TRUE
+          Evaluating --> Contradiction: All FALSE
+          Evaluating --> Satisfiable: Mixed
+          Tautology --> [*]
+          Contradiction --> [*]
+          Satisfiable --> [*]
+      </div>
+
+      <h3>۳.۵ نمودار گانت</h3>
+      <div class="mermaid">
+        gantt
+          title برنامه زمانی پروژه
+          dateFormat YYYY-MM-DD
+          axisFormat %m/%d
+
+          section تحلیل
+          تحلیل نیازمندی‌ها :done, a1, 2025-01-01, 15d
+          طراحی            :done, a2, 2025-01-10, 15d
+
+          section توسعه
+          تجزیه‌گر          :active, b1, 2025-01-20, 25d
+          ارزیاب            :b2, 2025-02-10, 20d
+
+          section تست
+          تست نهایی         :crit, c1, 2025-03-01, 15d
+      </div>
+
+      <h3>۳.۶ نمودار دایره‌ای</h3>
+      <div class="mermaid">
+        pie title Distribution of Logic Articles
+          "Classical" : 35
+          "Intuitionistic" : 25
+          "Modal" : 20
+          "Fuzzy" : 12
+          "Other" : 8
+      </div>
+
+      <h3>۳.۷ نمودار Git</h3>
+      <div class="mermaid">
+        gitGraph
+          commit id: "init"
+          commit id: "parser"
+          branch feature/eval
+          checkout feature/eval
+          commit id: "eval-v1"
+          commit id: "eval-v2"
+          checkout main
+          merge feature/eval tag: "v1.0"
+          commit id: "docs"
+      </div>
+
+      <h3>۳.۸ نمودار ER</h3>
+      <div class="mermaid">
+        erDiagram
+          FORMULA ||--o{ VARIABLE : contains
+          FORMULA ||--|| TRUTH_TABLE : generates
+          FORMULA {
+            int id PK
+            string expression
+            boolean is_tautology
+          }
+          VARIABLE {
+            int id PK
+            string name
+          }
+          TRUTH_TABLE {
+            int id PK
+            int row_count
+          }
+      </div>
+    </section>
+
+    <hr>
+
+    <!-- ==========================================
+         فصل ۴: تصاویر و چندرسانه‌ای
+    ========================================== -->
+    <section id="chap4">
+      <h2>۴. تصاویر و چندرسانه‌ای</h2>
+
+      <h3>۴.۱ تصویر ساده</h3>
+      <figure>
+        <img
+          src="https://via.placeholder.com/700x300/1A73E8/FFFFFF?text=Mathematical+Logic+Diagram"
+          alt="نمودار منطق ریاضی"
+          loading="lazy"
+          width="700"
+          height="300"
+        >
+        <figcaption>شکل ۱ — نمودار مفهومی منطق ریاضی</figcaption>
+      </figure>
+
+      <h3>۴.۲ تصویر کنار متن (Float)</h3>
+      <figure class="float-start">
+        <img
+          src="https://via.placeholder.com/250x250/00897B/FFFFFF?text=Mind+Map"
+          alt="نقشه ذهنی"
+          loading="lazy"
+          width="250"
+          height="250"
+        >
+        <figcaption>شکل ۲ — نقشه ذهنی</figcaption>
+      </figure>
+      <p>
+        این متن در کنار تصویر قرار گرفته تا نحوه عملکرد
+        تصاویر شناور (<code>float</code>) را نشان دهد.
+        در تبدیل به MDX این نوع چیدمان باید حفظ یا
+        به شکل مناسبی بازنمایی شود.
+        لورم ایپسوم متن ساختگی با تولید سادگی نامفهوم
+        از صنعت چاپ و با استفاده از طراحان گرافیک است.
+        چاپگرها
+
+ادامه فایل HTML (از بخش تصاویر شناور):
+
+```html
+        و متون بلکه روزنامه و مجله در ستون و سطرآنچنان که
+        لازم است و برای شرایط فعلی تکنولوژی مورد نیاز و
+        کاربردهای متنوع با هدف بهبود ابزارهای کاربردی می‌باشد.
+        کتاب‌های زیادی در شصت و سه درصد گذشته، حال و آینده
+        شناخت فراوان جامعه و متخصصان را می‌طلبد.
+      </p>
+      <div style="clear:both;"></div>
+
+      <h3>۴.۳ تصویر با لینک</h3>
+      <figure>
+        <a href="https://en.wikipedia.org/wiki/Mathematical_logic" target="_blank" rel="noopener">
+          <img
+            src="https://via.placeholder.com/500x200/FB8C00/FFFFFF?text=Click+to+visit+Wikipedia"
+            alt="لینک به ویکی‌پدیا — منطق ریاضی"
+            loading="lazy"
+            width="500"
+            height="200"
+          >
+        </a>
+        <figcaption>شکل ۳ — کلیک کنید تا به ویکی‌پدیا بروید</figcaption>
+      </figure>
+
+      <h3>۴.۴ تصاویر کنار هم (Gallery)</h3>
+      <div style="display:flex; gap:1rem; flex-wrap:wrap; justify-content:center; margin:1.5rem 0;">
+        <figure style="flex:1; min-width:200px; max-width:45%;">
+          <img
+            src="https://via.placeholder.com/300x200/1A73E8/FFFFFF?text=Subfig+1"
+            alt="زیرشکل ۱"
+            loading="lazy"
+            style="width:100%; border-radius:8px;"
+          >
+          <figcaption>(الف) تابع میرا</figcaption>
+        </figure>
+        <figure style="flex:1; min-width:200px; max-width:45%;">
+          <img
+            src="https://via.placeholder.com/300x200/00897B/FFFFFF?text=Subfig+2"
+            alt="زیرشکل ۲"
+            loading="lazy"
+            style="width:100%; border-radius:8px;"
+          >
+          <figcaption>(ب) تابع سیگموید</figcaption>
+        </figure>
+      </div>
+
+      <h3>۴.۵ ویدئو (Embed)</h3>
+      <figure>
+        <div style="position:relative; padding-bottom:56.25%; height:0; overflow:hidden; border-radius:8px;">
+          <iframe
+            src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ"
+            title="ویدئوی نمونه"
+            style="position:absolute; top:0; right:0; width:100%; height:100%; border:none;"
+            loading="lazy"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen
+          ></iframe>
+        </div>
+        <figcaption>ویدئو ۱ — ویدئوی نمونه (YouTube Embed)</figcaption>
+      </figure>
+
+      <h3>۴.۶ صوت (Audio)</h3>
+      <figure>
+        <audio controls preload="none" style="width:100%;">
+          <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+          مرورگر شما از عنصر audio پشتیبانی نمی‌کند.
+        </audio>
+        <figcaption>صوت ۱ — فایل صوتی نمونه</figcaption>
+      </figure>
+
+      <h3>۴.۷ SVG درون‌خطی</h3>
+      <figure>
+        <svg width="400" height="150" viewBox="0 0 400 150"
+             xmlns="http://www.w3.org/2000/svg"
+             style="display:block; margin:0 auto;">
+          <!-- پس‌زمینه -->
+          <rect width="400" height="150" rx="10" fill="#E3F2FD"/>
+
+          <!-- دایره‌ها — نمودار ون -->
+          <circle cx="150" cy="75" r="55" fill="#1A73E8" fill-opacity="0.4"
+                  stroke="#1A73E8" stroke-width="2"/>
+          <circle cx="230" cy="75" r="55" fill="#00897B" fill-opacity="0.4"
+                  stroke="#00897B" stroke-width="2"/>
+
+          <!-- برچسب‌ها -->
+          <text x="120" y="78" text-anchor="middle"
+                font-family="Vazirmatn, sans-serif"
+                font-size="14" fill="#0D47A1" font-weight="bold">P</text>
+          <text x="260" y="78" text-anchor="middle"
+                font-family="Vazirmatn, sans-serif"
+                font-size="14" fill="#004D40" font-weight="bold">Q</text>
+          <text x="190" y="78" text-anchor="middle"
+                font-family="Vazirmatn, sans-serif"
+                font-size="12" fill="#333">P∧Q</text>
+
+          <!-- عنوان -->
+          <text x="200" y="20" text-anchor="middle"
+                font-family="Vazirmatn, sans-serif"
+                font-size="13" fill="#616161">نمودار ون — اشتراک دو مجموعه</text>
+        </svg>
+        <figcaption>شکل ۴ — نمودار ون SVG درون‌خطی</figcaption>
+      </figure>
+    </section>
+
+    <hr>
+
+    <!-- ==========================================
+         فصل ۵: کد و الگوریتم
+    ========================================== -->
+    <section id="chap5">
+      <h2>۵. کد و الگوریتم</h2>
+
+      <h3>۵.۱ بلوک کد Python</h3>
+      <pre><code class="language-python">from itertools import product
+
+def is_tautology(formula, variables):
+    """Check if a propositional formula is a tautology."""
+    for values in product([True, False], repeat=len(variables)):
+        env = dict(zip(variables, values))
+        if not formula(env):
+            return False
+    return True
+
+# Example: p ∨ ¬p (Law of Excluded Middle)
+result = is_tautology(
+    lambda e: e['p'] or (not e['p']),
+    ['p']
+)
+print(f"p ∨ ¬p is tautology: {result}")  # True</code></pre>
+
+      <h3>۵.۲ بلوک کد JavaScript</h3>
+      <pre><code class="language-javascript">// De Morgan's Law verification
+function verifyDeMorgan(p, q) {
+  const left  = !(p && q);
+  const right = (!p) || (!q);
+  return left === right;
+}
+
+// Test all cases
+for (const p of [true, false]) {
+  for (const q of [true, false]) {
+    console.log(`p=${p}, q=${q}: ${verifyDeMorgan(p, q)}`);
+  }
+}</code></pre>
+
+      <h3>۵.۳ بلوک کد LaTeX</h3>
+      <pre><code class="language-latex">\begin{theorem}{قانون دمورگان}{demorgan}
+  برای هر دو گزاره $p$ و $q$:
+  \begin{align}
+    \neg(p \land q) &amp;\equiv (\neg p) \lor (\neg q) \\
+    \neg(p \lor q)  &amp;\equiv (\neg p) \land (\neg q)
+  \end{align}
+\end{theorem}</code></pre>
+
+      <h3>۵.۴ بلوک کد Bash</h3>
+      <pre><code class="language-bash"># Compile LaTeX document
+xelatex -interaction=nonstopmode document.tex
+biber document
+xelatex -interaction=nonstopmode document.tex
+xelatex -interaction=nonstopmode document.tex
+
+# Or with latexmk (recommended)
+latexmk -xelatex document.tex</code></pre>
+
+      <h3>۵.۵ بلوک کد CSS</h3>
+      <pre><code class="language-css">/* RTL Support for Persian Content */
+html[dir="rtl"] {
+  font-family: 'Vazirmatn', 'Tahoma', sans-serif;
+  line-height: 1.8;
+  text-align: right;
+}
+
+html[dir="rtl"] blockquote {
+  border-right: 4px solid #1A73E8;
+  border-left: none;
+  padding-right: 16px;
+}
+
+/* Mermaid diagrams always LTR */
+.mermaid {
+  direction: ltr;
+  text-align: center;
+}</code></pre>
+
+      <h3>۵.۶ کد درون‌خطی</h3>
+      <p>
+        از تابع <code>is_tautology()</code> برای بررسی تاتولوژی
+        استفاده کنید. خروجی آن <code>True</code> یا
+        <code>False</code> است.
+        فایل اصلی در مسیر <code dir="ltr">src/logic/evaluator.py</code>
+        قرار دارد.
+      </p>
+
+      <h3>۵.۷ شبه‌کد الگوریتم</h3>
+      <div class="note box">
+        <div class="box-title">الگوریتم ۱ — بررسی تاتولوژی با شمارش کامل</div>
+        <pre style="background:transparent; border:none; padding:0; font-family:'Vazirmatn',sans-serif; direction:rtl; text-align:right;">
+<strong>ورودی:</strong> فرمول گزاره‌ای φ با n متغیر
+<strong>خروجی:</strong> آیا φ تاتولوژی است؟
+
+<strong>برای</strong> i از ۰ <strong>تا</strong> 2ⁿ − 1 <strong>انجام بده:</strong>
+    v ← تخصیص ارزش متناظر با i
+    <strong>اگر</strong> Eval(φ, v) = ⊥ <strong>آنگاه:</strong>
+        <strong>برگردان</strong> «خیر»
+<strong>برگردان</strong> «بله»</pre>
+      </div>
+    </section>
+
+    <hr>
+
+    <!-- ==========================================
+         فصل ۶: عناصر HTML خاص
+    ========================================== -->
+    <section id="chap6">
+      <h2>۶. عناصر HTML خاص</h2>
+
+      <h3>۶.۱ بلوک تاشو (Details / Summary)</h3>
+      <details>
+        <summary><strong>جزئیات اثبات قانون دمورگان (کلیک کنید)</strong></summary>
+        <p>
+          اثبات از طریق جدول ارزش: هر چهار حالت ممکن را بررسی می‌کنیم.
+        </p>
+        $$\neg(p \land q) \equiv (\neg p) \lor (\neg q)$$
+        <table>
+          <tr><th>$p$</th><th>$q$</th><th>چپ</th><th>راست</th><th>برابر؟</th></tr>
+          <tr><td>T</td><td>T</td><td>F</td><td>F</td><td>✅</td></tr>
+          <tr><td>T</td><td>F</td><td>T</td><td>T</td><td>✅</td></tr>
+          <tr><td>F</td><td>T</td><td>T</td><td>T</td><td>✅</td></tr>
+          <tr><td>F</td><td>F</td><td>T</td><td>T</td><td>✅</td></tr>
+        </table>
+        <p>تمامی ستون‌ها برابرند. ∎</p>
+      </details>
+
+      <details>
+        <summary><strong>📚 منابع بیشتر</strong></summary>
+        <ul>
+          <li><a href="https://en.wikipedia.org/wiki/De_Morgan%27s_laws" target="_blank">ویکی‌پدیا — قوانین دمورگان</a></li>
+          <li><a href="https://plato.stanford.edu/entries/logic-classical/" target="_blank">Stanford Encyclopedia — Classical Logic</a></li>
+        </ul>
+      </details>
+
+      <h3>۶.۲ هایلایت و علامت‌گذاری</h3>
+      <p>
+        این یک <mark>متن هایلایت‌شده</mark> است.
+        این یک متن <ins>اضافه‌شده (inserted)</ins> و
+        این یک متن <del>حذف‌شده (deleted)</del> است.
+        این یک <small>متن کوچک</small> و
+        این <sup>بالانوشت</sup> و این <sub>زیرنوشت</sub> است.
+      </p>
+
+      <h3>۶.۳ کیبورد و متغیر</h3>
+      <p>
+        برای نیم‌فاصله در ویندوز: <kbd>Shift</kbd> + <kbd>Space</kbd>
+        <br>
+        برای کامپایل: <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>B</kbd>
+        <br>
+        متغیر ریاضی: <var>x</var> = <var>y</var> + <var>z</var>
+      </p>
+
+      <h3>۶.۴ آدرس و زمان</h3>
+      <address>
+        نویسنده: <a href="mailto:ali@example.com">مهدی سالم</a><br>
+        دانشگاه تهران، دانشکده ریاضی<br>
+        تهران، ایران
+      </address>
+      <p>
+        تاریخ انتشار:
+        <time datetime="2025-07-13">۲۲ تیر ۱۴۰۴</time>
+        — آخرین ویرایش:
+        <time datetime="2025-07-13T15:30:00+03:30">ساعت ۱۵:۳۰</time>
+      </p>
+
+      <h3>۶.۵ نوار پیشرفت (Progress)</h3>
+      <p>
+        پیشرفت پروژه:
+        <progress value="72" max="100" style="width:200px;">72%</progress>
+        ۷۲٪
+      </p>
+      <p>
+        تکمیل تست‌ها:
+        <meter value="0.85" min="0" max="1" low="0.3" high="0.7" optimum="0.9"
+               style="width:200px;">85%</meter>
+        ۸۵٪
+      </p>
+
+      <h3>۶.۶ جعبه‌های هشدار (Admonitions)</h3>
+
+      <div class="note box">
+        <div class="box-title">📌 نکته</div>
+        <p>در MDX معمولاً از کامپوننت‌های سفارشی برای Admonition استفاده می‌شود.</p>
+      </div>
+
+      <div class="warning box">
+        <div class="box-title">⚠ هشدار</div>
+        <p>
+          فونت فارسی در نمودارهای Mermaid ممکن است در برخی
+          مرورگرها به‌درستی نمایش داده نشود.
+        </p>
+      </div>
+
+      <div class="box" style="background:#FCE4EC; border-color:#C62828;">
+        <div class="box-title" style="color:#C62828;">🚫 احتیاط</div>
+        <p>
+          قبل از تبدیل، مطمئن شوید که encoding فایل
+          <code>UTF-8 with BOM</code> است.
+        </p>
+      </div>
+
+      <div class="box" style="background:#E8F5E9; border-color:#2E7D32;">
+        <div class="box-title" style="color:#2E7D32;">💡 راهنمایی</div>
+        <p>برای رندر ریاضیات در MDX، از KaTeX یا MathJax استفاده کنید.</p>
+      </div>
+
+      <h3>۶.۷ لیست وظایف</h3>
+      <ul style="list-style:none; padding-right:0.5em;">
+        <li>☑️ نوشتن تعاریف پایه</li>
+        <li>☑️ اثبات قضیه دمورگان</li>
+        <li>⬜ اثبات قضیه تمامیت گودل</li>
+        <li>⬜ بازبینی نهایی</li>
+      </ul>
+
+      <h3>۶.۸ نقل‌قول تو در تو</h3>
+      <blockquote>
+        <p>«منطق آغاز خرد است، نه پایان آن.» — اسپاک</p>
+        <blockquote>
+          <p>
+            <strong>قضیه ناتمامیت گودل:</strong>
+            در هر سیستم صوری سازگار که به‌اندازه کافی قوی باشد،
+            گزاره‌هایی وجود دارند که نه اثبات‌پذیرند و نه ابطال‌پذیر.
+          </p>
+          <blockquote>
+            <p>
+              این قضیه در سال ۱۹۳۱ توسط <strong>کورت گودل</strong>
+              منتشر شد.
+              <sup><a href="#fn2" class="footnote-ref" id="fnref2">[۲]</a></sup>
+            </p>
+          </blockquote>
+        </blockquote>
+      </blockquote>
+
+      <h3>۶.۹ Ordered List با انواع مختلف</h3>
+
+      <h4>عددی</h4>
+      <ol>
+        <li>تعریف مسئله</li>
+        <li>فرموله‌سازی</li>
+        <li>اثبات</li>
+      </ol>
+
+      <h4>حروف لاتین</h4>
+      <ol type="a">
+        <li>روش مستقیم</li>
+        <li>روش برهان خلف</li>
+        <li>روش استقراء</li>
+      </ol>
+
+      <h4>رومی</h4>
+      <ol type="i">
+        <li>مقدمه</li>
+        <li>بدنه اصلی</li>
+        <li>نتیجه‌گیری</li>
+      </ol>
+
+      <h3>۶.۱۰ فرم (برای تست تبدیل عنصر)</h3>
+      <form onsubmit="return false;" style="background:var(--bg-light); padding:1rem; border-radius:8px; margin:1rem 0;">
+        <fieldset style="border:1px solid var(--border-light); border-radius:8px; padding:1rem;">
+          <legend style="font-weight:700; color:var(--primary); padding:0 0.5em;">
+            بررسی فرمول منطقی
+          </legend>
+
+          <label for="formula-input" style="display:block; margin-bottom:0.3em; font-weight:600;">
+            فرمول:
+          </label>
+          <input
+            type="text"
+            id="formula-input"
+            placeholder="مثال: p ∧ q → p"
+            dir="ltr"
+            style="width:100%; padding:0.5rem; border:1px solid var(--border-light); border-radius:4px; font-family:monospace; margin-bottom:1rem;"
+          >
+
+          <label for="method-select" style="display:block; margin-bottom:0.3em; font-weight:600;">
+            روش اثبات:
+          </label>
+          <select id="method-select"
+                  style="width:100%; padding:0.5rem; border:1px solid var(--border-light); border-radius:4px; margin-bottom:1rem;">
+            <option value="truth-table">جدول ارزش</option>
+            <option value="natural-deduction">استنتاج طبیعی</option>
+            <option value="tableau">تابلو</option>
+            <option value="resolution">رزولوشن</option>
+          </select>
+
+          <div style="margin-bottom:1rem;">
+            <label style="font-weight:600;">گزینه‌ها:</label><br>
+            <label><input type="checkbox" checked> نمایش جدول ارزش</label><br>
+            <label><input type="checkbox"> نمایش درخت اثبات</label><br>
+            <label><input type="checkbox"> خروجی LaTeX</label>
+          </div>
+
+          <div style="margin-bottom:1rem;">
+            <label style="font-weight:600;">خروجی:</label><br>
+            <label><input type="radio" name="output" value="html" checked> HTML</label>
+            <label><input type="radio" name="output" value="pdf"> PDF</label>
+            <label><input type="radio" name="output" value="mdx"> MDX</label>
+          </div>
+
+          <button type="submit"
+                  style="background:var(--primary); color:white; border:none; padding:0.6rem 1.5rem; border-radius:6px; font-size:1em; cursor:pointer; font-family:inherit;">
+            🧮 بررسی کن
+          </button>
+        </fieldset>
+      </form>
+    </section>
+
+    <hr>
+
+    <!-- ==========================================
+         فصل ۷: محتوای دوزبانه
+    ========================================== -->
+    <section id="chap7">
+      <h2>۷. محتوای دوزبانه</h2>
+
+      <h3>۷.۱ پاراگراف ترکیبی فارسی-انگلیسی</h3>
+      <p>
+        در منطق ریاضی (<span dir="ltr" lang="en">Mathematical Logic</span>)،
+        یک <strong>گزاره</strong>
+        (<span dir="ltr" lang="en">Proposition</span>)
+        جمله‌ای خبری است که دقیقاً یکی از دو ارزش
+        <strong>درست</strong>
+        (<span dir="ltr" lang="en">True, $\top$</span>)
+        یا <strong>نادرست</strong>
+        (<span dir="ltr" lang="en">False, $\bot$</span>)
+        را دارد. این مفهوم پایه‌ای‌ترین واحد در
+        <strong>منطق گزاره‌ای</strong>
+        (<span dir="ltr" lang="en">Propositional Logic</span>) است.
+      </p>
+
+      <h3>۷.۲ بلوک کامل انگلیسی درون سند فارسی</h3>
+      <div dir="ltr" lang="en" class="ltr-block"
+           style="background:#F5F5F5; padding:1.5rem; border-radius:8px; border-left:4px solid var(--primary); margin:1.5rem 0;">
+        <h4 style="color:var(--primary); margin-top:0;">
+          Definition (Tautology)
+        </h4>
+        <p>
+          A compound proposition $\varphi$ is a <strong>tautology</strong>
+          if and only if it evaluates to <strong>true</strong> under
+          every possible truth assignment:
+        </p>
+        $$\models \varphi \iff \forall\, v : v(\varphi) = \top$$
+        <p>
+          <strong>Example:</strong> $p \lor \neg p$ is a tautology
+          (Law of Excluded Middle).
+        </p>
+      </div>
+
+      <h3>۷.۳ بلوک کامل انگلیسی — اثبات</h3>
+      <div dir="ltr" lang="en" class="ltr-block"
+           style="background:#FFFDE7; padding:1.5rem; border-radius:8px; border-left:4px solid var(--accent-orange); margin:1.5rem 0;">
+        <h4 style="color:var(--accent-orange); margin-top:0;">
+          Proof (De Morgan's First Law)
+        </h4>
+        <p>We need to show: $\neg(p \land q) \equiv (\neg p) \lor (\neg q)$</p>
+        <p><strong>Forward direction ($\Rightarrow$):</strong></p>
+        <p>
+          Assume $\neg(p \land q)$. For contradiction, suppose
+          $\neg[(\neg p) \lor (\neg q)]$, i.e., $p \land q$.
+          This contradicts our assumption.
+        </p>
+        <p><strong>Backward direction ($\Leftarrow$):</strong></p>
+        <p>
+          Assume $(\neg p) \lor (\neg q)$. If $p \land q$, then both
+          $p$ and $q$ hold, contradicting $\neg p$ or $\neg q$. ∎
+        </p>
+      </div>
+
+      <h3>۷.۴ جدول دوزبانه</h3>
+      <table>
+        <caption>جدول ۴ — واژه‌نامه فارسی-انگلیسی</caption>
+        <thead>
+          <tr>
+            <th>فارسی</th>
+            <th dir="ltr">English</th>
+            <th>نماد</th>
+            <th>توضیح</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>گزاره</td>
+            <td dir="ltr">Proposition</td>
+            <td>$p, q, r$</td>
+            <td>جمله خبری با ارزش درست/نادرست</td>
+          </tr>
+          <tr>
+            <td>تاتولوژی</td>
+            <td dir="ltr">Tautology</td>
+            <td>$\top$</td>
+            <td>همیشه درست</td>
+          </tr>
+          <tr>
+            <td>تناقض</td>
+            <td dir="ltr">Contradiction</td>
+            <td>$\bot$</td>
+            <td>همیشه نادرست</td>
+          </tr>
+          <tr>
+            <td>سور عمومی</td>
+            <td dir="ltr">Universal Quantifier</td>
+            <td>$\forall$</td>
+            <td>برای همه</td>
+          </tr>
+          <tr>
+            <td>سور وجودی</td>
+            <td dir="ltr">Existential Quantifier</td>
+            <td>$\exists$</td>
+            <td>وجود دارد</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <hr>
+
+    <!-- ==========================================
+         فصل ۸: فرمول‌های پیشرفته
+    ========================================== -->
+    <section id="chap8">
+      <h2>۸. فرمول‌های پیشرفته ریاضی</h2>
+
+      <h3>۸.۱ ماتریس</h3>
+      $$
+      A = \begin{pmatrix}
+        a_{11} & a_{12} & \cdots & a_{1n} \\
+        a_{21} & a_{22} & \cdots & a_{2n} \\
+        \vdots & \vdots & \ddots & \vdots \\
+        a_{m1} & a_{m2} & \cdots & a_{mn}
+      \end{pmatrix}
+      ,\qquad
+      \vec{x} = \begin{pmatrix} x_1 \\ x_2 \\ \vdots \\ x_n \end{pmatrix}
+      $$
+
+      <h3>۸.۲ مجموع و انتگرال</h3>
+      $$
+      \sum_{k=0}^{\infty} \frac{x^k}{k!} = e^x
+      ,\qquad
+      \int_{-\infty}^{+\infty} e^{-x^2}\,dx = \sqrt{\pi}
+      $$
+
+      <h3>۸.۳ فرمول‌های فیزیک (معادلات ماکسول)</h3>
+      $$
+      \begin{aligned}
+        \nabla \cdot \mathbf{E} &= \frac{\rho}{\epsilon_0}
+          &\quad& \text{(قانون گاوس)} \\
+        \nabla \cdot \mathbf{B} &= 0
+          &\quad& \text{(نبود تک‌قطبی مغناطیسی)} \\
+        \nabla \times \mathbf{E} &= -\frac{\partial \mathbf{B}}{\partial t}
+          &\quad& \text{(قانون فاراده)} \\
+        \nabla \times \mathbf{B} &= \mu_0 \mathbf{J}
+          + \mu_0 \epsilon_0 \frac{\partial \mathbf{E}}{\partial t}
+          &\quad& \text{(قانون آمپر-ماکسول)}
+      \end{aligned}
+      $$
+
+      <h3>۸.۴ حالت‌ها (Cases)</h3>
+      $$
+      |x| = \begin{cases}
+        x  & \text{اگر } x \geq 0 \\
+        -x & \text{اگر } x < 0
+      \end{cases}
+      $$
+
+      <h3>۸.۵ استقراء ریاضی</h3>
+      <p><strong>قضیه:</strong> $\displaystyle\sum_{k=1}^{n} k = \frac{n(n+1)}{2}$</p>
+
+      <p><strong>پایه:</strong></p>
+      $$\sum_{k=1}^{1} k = 1 = \frac{1 \cdot 2}{2} \;\checkmark$$
+
+      <p><strong>گام استقراء:</strong></p>
+      $$
+      \begin{aligned}
+        \sum_{k=1}^{m+1} k
+        &= \left(\sum_{k=1}^{m} k\right) + (m+1) \\
+        &= \frac{m(m+1)}{2} + (m+1) \\
+        &= \frac{(m+1)(m+2)}{2} \quad\blacksquare
+      \end{aligned}
+      $$
+
+      <h3>۸.۶ زنجیره استدلال</h3>
+      <div class="proof box">
+        <div class="box-title">اثبات: $\{p \to q,\; q \to r\} \vdash p \to r$</div>
+        <table style="width:auto; margin:0;">
+          <thead>
+            <tr><th>خط</th><th>فرمول</th><th>توجیه</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>۱</td><td>$p \to q$</td><td>فرض</td></tr>
+            <tr><td>۲</td><td>$q \to r$</td><td>فرض</td></tr>
+            <tr><td>۳</td><td>$p$</td><td>فرض (برای معرفی شرطی)</td></tr>
+            <tr><td>۴</td><td>$q$</td><td>حذف شرطی: ۱، ۳</td></tr>
+            <tr><td>۵</td><td>$r$</td><td>حذف شرطی: ۲، ۴</td></tr>
+            <tr><td>۶</td><td>$p \to r$</td><td>معرفی شرطی: ۳–۵ ∎</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>۸.۷ فرمول‌های نظریه مجموعه‌ها</h3>
+      $$
+      \begin{aligned}
+        A \cup B &= \{x \mid x \in A \lor x \in B\} \\
+        A \cap B &= \{x \mid x \in A \land x \in B\} \\
+        \mathcal{P}(A) &= \{S \mid S \subseteq A\} \\
+        |A \cup B| &= |A| + |B| - |A \cap B|
+      \end{aligned}
+      $$
+
+      <h3>۸.۸ تابع زتای ریمان</h3>
+      $$
+      \zeta(s) = \sum_{n=1}^{\infty} \frac{1}{n^s}
+               = \prod_{p \text{ prime}} \frac{1}{1 - p^{-s}}
+      \qquad (\operatorname{Re}(s) > 1)
+      $$
+
+      <h3>۸.۹ تعریف اپسیلون-دلتای حد</h3>
+      $$
+      \lim_{x \to a} f(x) = L
+      \;\;\Longleftrightarrow\;\;
+      \forall \epsilon > 0\;\;
+      \exists \delta > 0\;\;
+      \forall x\;\;
+      \Big(0 < |x - a| < \delta \implies |f(x) - L| < \epsilon\Big)
+      $$
+
+      <h3>۸.۱۰ فرمول درون‌خطی فارسی-انگلیسی</h3>
+      <p>
+        مطابق <a href="#thm-demorgan">قضیه ۱.۱</a>،
+        اگر $p$ بیانگر «هوا بارانی است» و $q$ بیانگر
+        «هوا سرد است» باشد، آنگاه
+        $\neg(p \land q)$ یعنی «<em>هوا بارانی و سرد نیست</em>»
+        معادل است با
+        $(\neg p) \lor (\neg q)$ یعنی
+        «<em>هوا بارانی نیست <strong>یا</strong> سرد نیست</em>».
+      </p>
+    </section>
+
+    <hr>
+
+    <!-- ==========================================
+         پانوشت‌ها
+    ========================================== -->
+    <section id="chap-footnotes" class="footnotes">
+      <h2>پانوشت‌ها</h2>
+      <ol>
+        <li id="fn1">
+          اصل طرد شق ثالث
+          (<span dir="ltr" lang="en">Law of Excluded Middle</span>)
+          در منطق شهودی
+          (<span dir="ltr" lang="en">Intuitionistic Logic</span>)
+          پذیرفته نیست. برای جزئیات بیشتر به مقاله گودل (۱۹۳۱) مراجعه کنید.
+          <a href="#fnref1" title="بازگشت">↩</a>
+        </li>
+        <li id="fn2">
+          Kurt Gödel,
+          <cite>"Über formal unentscheidbare Sätze der Principia
+          Mathematica und verwandter Systeme I"</cite>,
+          <span dir="ltr" lang="en">Monatshefte für Mathematik und Physik</span>,
+          38: 173–198, 1931.
+          <a href="#fnref2" title="بازگشت">↩</a>
+        </li>
+        <li id="fn3">
+          نیم‌فاصله
+          (<span dir="ltr" lang="en">Zero-Width Non-Joiner, U+200C</span>)
+          کاراکتری نامرئی است که در فارسی بین پیشوند/پسوند و ریشه
+          قرار می‌گیرد: «می‌روم»، «کتاب‌ها».
+          <a href="#fnref3" title="بازگشت">↩</a>
+        </li>
+      </ol>
+    </section>
+
+    <hr>
+
+    <!-- ==========================================
+         کتاب‌نامه
+    ========================================== -->
+    <section id="chap-bib">
+      <h2>📚 کتاب‌نامه</h2>
+      <ol style="font-size:0.95em;">
+        <li id="ref-knuth">
+          <span dir="ltr" lang="en">
+            Knuth, D. E. (1997).
+            <cite>The Art of Computer Programming</cite>,
+            Vol. 1, 3rd ed. Addison-Wesley.
+          </span>
+        </li>
+        <li id="ref-godel">
+          <span dir="ltr" lang="en">
+            Gödel, K. (1931).
+            <cite>"Über formal unentscheidbare Sätze der Principia
+            Mathematica und verwandter Systeme I"</cite>.
+            Monatshefte für Mathematik und Physik, 38, 173–198.
+          </span>
+        </li>
+        <li id="ref-ebrahimi">
+          ابراهیمی، محمد (۱۳۹۹).
+          <cite>مبانی منطق ریاضی</cite>.
+          انتشارات دانشگاه تهران.
+        </li>
+        <li id="ref-mdn">
+          <span dir="ltr" lang="en">
+            MDN Web Docs (2024).
+            <cite>"MathML"</cite>.
+            <a href="https://developer.mozilla.org/en-US/docs/Web/MathML"
+               target="_blank" rel="noopener">
+              developer.mozilla.org
+            </a>.
+            Accessed: 2024-12-01.
+          </span>
+        </li>
+        <li id="ref-vazirmatn">
+          <span dir="ltr" lang="en">
+            Rastikerdar, S. (2024).
+            <cite>"Vazirmatn Font"</cite>.
+            <a href="https://github.com/rastikerdar/vazirmatn"
+               target="_blank" rel="noopener">
+              github.com/rastikerdar/vazirmatn
+            </a>.
+          </span>
+        </li>
+      </ol>
+    </section>
+
+    <hr>
+
+    <!-- ==========================================
+         پاصفحه
+    ========================================== -->
+    <footer>
+      <p>
+        ✍️ نویسنده: مهدی سالم
+        &nbsp;|&nbsp;
+        📅 تابستان ۱۴۰۴ — Summer 2025
+        &nbsp;|&nbsp;
+        📜 مجوز:
+        <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener">MIT</a>
+      </p>
+      <p>
+        🔗 مخزن:
+        <a href="https://github.com/example/format-converter"
+           target="_blank" rel="noopener" dir="ltr">
+          github.com/example/format-converter
+        </a>
+      </p>
+      <p style="margin-top:1rem; font-size:0.8em; color:#999;">
+        این سند صرفاً جهت تست تبدیل فرمت HTML → MDX تهیه شده است.
+      </p>
+    </footer>
+
+  </div><!-- /.container -->
+</body>
+</html>

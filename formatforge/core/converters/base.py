@@ -103,6 +103,7 @@ class ConversionContext:
         self.imports_needed: set[str] = set()
         self.labels: dict[str, str] = {}  # label → id mapping
         self.dry_run: bool = False
+        self.extra: dict[str, Any] = {}  # arbitrary extra data
 
     def add_warning(self, msg: str) -> None:
         """افزودن هشدار."""

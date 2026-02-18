@@ -64,15 +64,15 @@ _RE_BIBLIOGRAPHY = re.compile(r"\\bibliography\{([^}]+)\}")
 _RE_BIBRESOURCE = re.compile(r"\\addbibresource\{([^}]+)\}")
 _RE_GRAPHICSPATH = re.compile(r"\\graphicspath\{([^}]+)\}")
 _RE_INCLUDEGRAPHICS = re.compile(
-    r"\\includegraphics(?:$$[^$$]*\])?\{([^}]+)\}"
+    r"\\includegraphics(?:\[[^\]]*\])?\{([^}]+)\}"
 )
 _RE_DOCUMENTCLASS = re.compile(
-    r"\\documentclass(?:$$[^$$]*\])?\{(\w+)\}"
+    r"\\documentclass(?:\[[^\]]*\])?\{(\w+)\}"
 )
 _RE_BEGIN_DOC = re.compile(r"\\begin\{document\}")
 
 # Markdown image: ![alt](path)
-_RE_MD_IMAGE = re.compile(r"!$$[^$$]*\]\(([^)]+)\)")
+_RE_MD_IMAGE = re.compile(r"!\[[^\]]*\]\(([^)]+)\)")
 
 # Markdown frontmatter
 _RE_MD_FRONTMATTER = re.compile(r"^---\s*\n(.*?)\n---", re.DOTALL)

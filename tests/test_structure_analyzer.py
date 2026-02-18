@@ -361,10 +361,9 @@ class TestEdgeCases:
         assert result.total_files == 1  # only readme.md
 
     def test_latex_without_begin_document(self, tmp: Path):
-        """فایل .sty بدون begin{document}."""
-        (tmp / "custom.sty").write_text(
+        """فایل .tex بدون begin{document}."""
+        (tmp / "preamble.tex").write_text(
             "\\NeedsTeXFormat{LaTeX2e}\n"
-            "\\ProvidesPackage{custom}\n"
             "\\newcommand{\\hi}{Hello}\n",
             encoding="utf-8",
         )
