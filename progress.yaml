@@ -1,7 +1,7 @@
 # FormatForge — پیشرفت توسعه
 # بعد از هر چت بروزرسانی شود
 
-current_sprint: S06
+current_sprint: S09
 current_chat: 3
 
 completed:
@@ -57,7 +57,76 @@ completed:
     status: "done"
     notes: "Fixed 7 failing tests: regex $$ → \\[ corruption, verbatim .strip() whitespace, .sty test fixture"
 
+  - sprint: S07
+    chat: 1
+    date: "2026-02-18"
+    files:
+      - formatforge/core/converters/html_to_mdx.py
+      - tests/test_html_to_mdx.py
+    status: "done"
+    notes: "HTMLToMDXConverter — full pipeline: head metadata, body conversion, processors, JSX, ZWNJ preservation. 98 tests pass."
+
+  - sprint: S07
+    chat: 2
+    date: "2026-02-18"
+    files:
+      - formatforge/core/converters/html_elements.py
+      - tests/test_html_elements.py
+    status: "done"
+    notes: "HTML element helpers: CellModel/RowModel/TableModel, table/form/media/svg/math conversion. 90 tests pass."
+
+  - sprint: S07
+    chat: 3
+    date: "2026-02-18"
+    files:
+      - tests/e2e/test_e2e_html.py
+    status: "done"
+    notes: "E2E HTML→MDX tests: 64 tests covering full pipeline with rich sample HTML. All 1090 tests pass."
+
+  - sprint: S08
+    chat: 1
+    date: "2026-02-19"
+    files:
+      - formatforge/core/converters/latex_parser.py (fixed)
+      - tests/test_latex_parser.py (fixed)
+    status: "done"
+    notes: "LaTeX parser fixes: nested brace handling for title/author/date, newtcolorbox multi-opt regex, ZWNJ test fixture, recursive node search in tests. 118 tests pass."
+
+  - sprint: S08
+    chat: 2-3
+    date: "2026-02-19"
+    files:
+      - formatforge/core/converters/latex_to_mdx.py
+      - tests/test_latex_to_mdx.py
+    status: "done"
+    notes: "LaTeXToMDXConverter — full pipeline: structural conversion (sections, formatting, lists), environment conversion (theorems, figures, tables, code, math, tcolorbox), metadata extraction, ZWNJ preservation. 87 tests pass."
+
+  - sprint: S08
+    chat: 4
+    date: "2026-02-19"
+    files:
+      - formatforge/core/converters/latex_to_mdx.py (metadata in same file)
+    status: "done"
+    notes: "LaTeX metadata extraction integrated: title, author, date (ISO validation), language detection (xepersian), features (math/code/tikz), abstract. All 1295 tests pass."
+
+  - sprint: S09
+    chat: 1
+    date: "2026-02-19"
+    files:
+      - formatforge/core/converters/latex_book_converter.py
+      - tests/test_latex_book.py
+    status: "done"
+    notes: "LaTeXBookConverter — multi-chapter book support: detection, chapter splitting, per-chapter MDX, _series.json, cross-chapter refs, ZWNJ preservation. 39 tests pass."
+
+  - sprint: S09
+    chat: 2
+    date: "2026-02-19"
+    files:
+      - formatforge/core/converters/latex_cleaner.py
+    status: "done"
+    notes: "LaTeXCleaner — removes unnecessary LaTeX commands: page layout, font commands, packages, counters, spacing, phantoms, colors. Preserves ZWNJ."
+
 next:
-  sprint: S07
-  chat: 1
-  target: "HTML → MDX converter"
+  sprint: S09
+  chat: 3
+  target: "TikZ → SVG pipeline + E2E LaTeX tests"
