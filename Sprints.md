@@ -16,6 +16,7 @@
 **خروجی نهایی:** فایل(های) MDX سازگار با Next.js / Astro / Gatsby / Docusaurus یا هر فریم‌ورک مبتنی بر MDX
 
 ---
+[full-promt](PROMPT.md)
 
 ## ۲. بیان مسئله و هدف
 
