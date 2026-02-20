@@ -1,0 +1,1455 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>نمونه جامع مارک‌داون فارسی با نمودارهای Mermaid</title>
+
+    <!-- Vazirmatn font for Persian -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" />
+
+    <!-- KaTeX for math rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" />
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+        onload="renderMathInElement(document.body, {
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false}
+            ],
+            throwOnError: false
+        });"></script>
+
+    <!-- Mermaid for diagrams -->
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: { htmlLabels: true, useMaxWidth: true },
+            securityLevel: 'loose',
+        });
+    </script>
+
+    <!-- Highlight.js for code -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.10.0/build/styles/github.min.css" />
+    <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.10.0/build/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
+
+    <style>
+        :root {
+            --bg: #ffffff;
+            --text: #1a1a1a;
+            --code-bg: #f6f8fa;
+            --border: #d0d7de;
+            --accent: #0969da;
+            --accent-light: #ddf4ff;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Vazirmatn', 'Segoe UI', Tahoma, sans-serif;
+            line-height: 1.9;
+            color: var(--text);
+            background: var(--bg);
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 2rem 2.5rem;
+            direction: rtl;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            margin: 1.8em 0 0.6em;
+            line-height: 1.35;
+            font-weight: 700;
+        }
+        h1 { font-size: 2rem; border-bottom: 2px solid var(--accent); padding-bottom: 0.4em; }
+        h2 { font-size: 1.65rem; border-bottom: 1px solid var(--border); padding-bottom: 0.3em; }
+        h3 { font-size: 1.35rem; }
+        h4 { font-size: 1.15rem; }
+        p { margin: 0.8em 0; }
+
+        /* Code */
+        pre {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem 1.2rem;
+            overflow-x: auto;
+            direction: ltr;
+            text-align: left;
+            margin: 1.2em 0;
+            font-size: 0.88em;
+        }
+        code {
+            font-family: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace;
+            font-size: 0.9em;
+        }
+        :not(pre) > code {
+            background: var(--code-bg);
+            padding: 0.15em 0.4em;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+        }
+
+        /* Mermaid diagrams */
+        pre.mermaid {
+            background: #fff;
+            border: 2px solid #e1e4e8;
+            border-radius: 10px;
+            padding: 1.5rem;
+            text-align: center;
+            direction: ltr;
+        }
+
+        /* Math */
+        .math-block {
+            direction: ltr;
+            text-align: center;
+            margin: 1.5em 0;
+            padding: 1em;
+            background: #fafbfc;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+        .math-inline {
+            direction: ltr;
+            unicode-bidi: isolate;
+        }
+
+        /* Blockquote */
+        blockquote {
+            border-right: 4px solid var(--accent);
+            padding: 0.6em 1.2em;
+            margin: 1.2em 0;
+            background: var(--accent-light);
+            border-radius: 0 6px 6px 0;
+            color: #24292f;
+        }
+        blockquote p { margin: 0.4em 0; }
+
+        /* Tables */
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1.2em 0;
+            font-size: 0.95em;
+        }
+        th, td {
+            border: 1px solid var(--border);
+            padding: 0.6em 1em;
+            text-align: right;
+        }
+        th { background: var(--code-bg); font-weight: 600; }
+        tr:nth-child(even) { background: #f6f8fa; }
+
+        /* Images & figures */
+        img { max-width: 100%; height: auto; border-radius: 6px; }
+        figure { margin: 1.5em 0; text-align: center; }
+        figcaption { color: #57606a; font-size: 0.9em; margin-top: 0.5em; }
+
+        /* Links */
+        a { color: var(--accent); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        /* Lists */
+        ul, ol { margin: 0.8em 0; padding-right: 2em; }
+        li { margin: 0.3em 0; }
+        li > ul, li > ol { margin: 0.2em 0; }
+
+        hr { border: none; border-top: 1px solid var(--border); margin: 2.5em 0; }
+
+        /* Admonitions */
+        .admonition {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1em 1.2em;
+            margin: 1.2em 0;
+        }
+        .admonition-title {
+            font-weight: 700;
+            margin-bottom: 0.5em;
+            text-transform: capitalize;
+        }
+        .admonition-note { border-right: 4px solid #0969da; background: #ddf4ff; }
+        .admonition-warning { border-right: 4px solid #d4a72c; background: #fff8c5; }
+        .admonition-tip { border-right: 4px solid #1a7f37; background: #dafbe1; }
+        .admonition-caution { border-right: 4px solid #cf222e; background: #ffebe9; }
+        .admonition-important { border-right: 4px solid #8250df; background: #fbefff; }
+
+        /* Math environments (theorem, definition, proof, ...) */
+        .math-env {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1em 1.2em;
+            margin: 1.2em 0;
+        }
+        .math-env-title {
+            font-weight: 700;
+            margin-bottom: 0.4em;
+        }
+        .theorem { border-right: 4px solid #8250df; background: #fbefff; }
+        .definition { border-right: 4px solid #0969da; background: #ddf4ff; }
+        .proof { border-right: 4px solid #57606a; background: #f6f8fa; }
+        .lemma { border-right: 4px solid #bf8700; background: #fff8c5; }
+        .example { border-right: 4px solid #1a7f37; background: #dafbe1; }
+
+        /* Citation & CrossRef */
+        .citation { color: var(--accent); font-weight: 600; }
+        .crossref { color: #8250df; }
+
+        /* Details/Summary */
+        details {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.8em 1.2em;
+            margin: 1em 0;
+        }
+        summary {
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        /* Footnotes */
+        .footnote { font-size: 0.85em; }
+        .footnote-ref { vertical-align: super; font-size: 0.75em; }
+
+        /* Frontmatter panel */
+        .frontmatter-panel {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1em 1.2em;
+            margin-bottom: 2em;
+            font-size: 0.82em;
+            direction: ltr;
+            text-align: left;
+        }
+        .frontmatter-panel summary { color: #57606a; font-size: 0.95em; }
+        .frontmatter-panel pre { border: none; background: transparent; padding: 0.5em 0; margin: 0; }
+
+        .imports-panel {
+            background: #fff8c5;
+            border: 1px solid #d4a72c;
+            border-radius: 8px;
+            padding: 0.6em 1em;
+            margin-bottom: 1.5em;
+            font-size: 0.82em;
+            direction: ltr;
+        }
+        .imports-panel code { font-size: 0.85em; }
+    </style>
+</head>
+<body>
+    <details class="frontmatter-panel">
+        <summary>Frontmatter (YAML metadata)</summary>
+        <pre>title: نمونه جامع مارک‌داون فارسی با نمودارهای Mermaid
+slug: mermaid
+date: &#x27;2025-07-13&#x27;
+lang: fa
+dir: rtl
+type: article
+tags: []
+categories: []
+description: فایل تست تبدیل فرمت MD به MDX
+keywords: []
+toc: true
+math: true
+mermaid: true
+codeHighlight: true
+sourceFormat: markdown
+sourceFile: sample-mermaid.md
+assets:
+  images: []
+  files: []
+noindex: false
+converterVersion: 0.1.0
+qualityScore: 0.0
+convertedAt: &#x27;2026-02-20T04:01:19.850472+00:00&#x27;</pre>
+    </details>
+    <details class="imports-panel" open>
+        <summary>MDX Imports</summary>
+        <code>import Admonition from &#x27;@/components/ui/Admonition&#x27;;</code><br/>
+        <code>import Definition from &#x27;@/components/math/Definition&#x27;;</code><br/>
+        <code>import MermaidDiagram from &#x27;@/components/diagrams/MermaidDiagram&#x27;;</code><br/>
+        <code>import Proof from &#x27;@/components/math/Proof&#x27;;</code><br/>
+        <code>import Theorem from &#x27;@/components/math/Theorem&#x27;;</code><br/>
+        <code>import remarkMath from &#x27;remark-math&#x27;;</code><br/>
+        <code>import rehypeKatex from &#x27;rehype-katex&#x27;;</code><br/>
+        <code>import { useEffect, useRef, useState } from &#x27;react&#x27;;</code><br/>
+        <code>import mermaid from &#x27;mermaid&#x27;;</code><br/>
+        <code>import MermaidDiagram from &#x27;@/components/Mermaid&#x27;;</code><br/>
+        <code>import Proof from &#x27;@/components/Proof&#x27;;</code><br/>
+        <code>import Definition from &#x27;@/components/Definition&#x27;;</code><br/>
+        <code>import MermaidDiagram from &#x27;@/components/Mermaid&#x27;;&lt;/div&gt;</code><br/>
+    </details>
+
+    <article class="content">
+<hr />
+<p>dir: "rtl"
+lang: "fa"</p>
+<hr />
+<h1 id="_1">۱. مقدمه</h1>
+<p>این سند یک <strong>نمونه جامع</strong> مارک‌داون فارسی است که برای تست تبدیل فرمت به <strong>MDX</strong> طراحی شده است. در این سند تمامی انواع عناصر مارک‌داون و نمودارهای <a href="https://mermaid.js.org/">Mermaid</a> پوشش داده شده‌اند.</p>
+<blockquote>
+<p>**💡 نکته: ** برای رندر صحیح فارسی در Mermaid، محدودیت‌هایی وجود دارد که در <a href="#۱۰-راهنمای-فنی-مارکداون-فارسی-برای-وب">بخش راهنمای فنی</a> توضیح داده شده‌اند.</p>
+</blockquote>
+<hr />
+<h2 id="_2">۱. ۱ قالب‌بندی متن</h2>
+<p>این یک <strong>متن توپر (Bold)</strong> است.
+این یک <em>متن مورب (Italic)</em> است.
+این یک <strong><em>متن توپر و مورب</em></strong> است.
+این یک ~~متن خط‌خورده (Strikethrough)~~ است.
+این یک <code>کد درون‌خطی (Inline Code)</code> است.
+این یک <a href="https://fa.wikipedia.org">لینک به ویکی‌پدیا</a> است.
+این یک کلمه با زبان مبدأ انگلیسی: <em>Proposition</em> (گزاره) است.</p>
+<h2 id="_3">۱. ۲ لیست‌ها</h2>
+<h3 id="_4">لیست غیرمرتب</h3>
+<ul>
+<li>منطق گزاره‌ای (Propositional Logic)</li>
+<li>جدول ارزش</li>
+<li>تاتولوژی و تناقض</li>
+<li>منطق محمولات (Predicate Logic)</li>
+<li>سور عمومی <span class="math-inline" dir="ltr">$\forall$</span></li>
+<li>سور وجودی <span class="math-inline" dir="ltr">$\exists$</span></li>
+<li>نظریه مجموعه‌ها</li>
+<li>ZFC</li>
+<li>نظریه نوع‌ها</li>
+</ul>
+<h3 id="_5">لیست مرتب</h3>
+<ol>
+<li>تعریف مسئله</li>
+<li>فرموله‌سازی</li>
+<li>اثبات</li>
+<li>روش مستقیم</li>
+<li>روش برهان خلف</li>
+<li>روش استقراء ریاضی</li>
+<li>نتیجه‌گیری</li>
+</ol>
+<h3 id="task-list">لیست وظایف (Task List)</h3>
+<ul>
+<li>[x] نوشتن تعاریف پایه</li>
+<li>[x] اثبات قضیه دمورگان</li>
+<li>[ ] اثبات قضیه تمامیت گودل</li>
+<li>[ ] بازبینی نهایی</li>
+</ul>
+<hr />
+<h2 id="_6">۱. ۳ نقل‌قول‌ها</h2>
+<blockquote>
+<p>«منطق آغاز خرد است، نه پایان آن. »
+— اسپاک (Star Trek)</p>
+<p>**قضیه ناتمامیت گودل: **
+در هر سیستم صوری سازگار که به‌اندازه کافی قوی باشد،
+گزاره‌هایی وجود دارند که نه اثبات‌پذیرند و نه ابطال‌پذیر.</p>
+<blockquote>
+<p>این قضیه در سال ۱۹۳۱ توسط <strong>کورت گودل</strong> (Kurt Gödel)
+منتشر شد و بنیان ریاضیات را متحول کرد.</p>
+</blockquote>
+</blockquote>
+<hr />
+<h2 id="_7">۱. ۴ جداول</h2>
+<h3 id="_8">جدول ساده — عملگرهای منطقی</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">عملگر</th>
+<th style="text-align: center;">نماد</th>
+<th style="text-align: left;">نام انگلیسی</th>
+<th style="text-align: left;">مثال</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;">نقیض</td>
+<td style="text-align: center;"><span class="math-inline" dir="ltr">$\neg$</span></td>
+<td style="text-align: left;">Negation</td>
+<td style="text-align: left;"><span class="math-inline" dir="ltr">$\neg p$</span></td>
+</tr>
+<tr>
+<td style="text-align: center;">عطف</td>
+<td style="text-align: center;"><span class="math-inline" dir="ltr">$\land$</span></td>
+<td style="text-align: left;">Conjunction</td>
+<td style="text-align: left;"><span class="math-inline" dir="ltr">$p \land q$</span></td>
+</tr>
+<tr>
+<td style="text-align: center;">فصل</td>
+<td style="text-align: center;"><span class="math-inline" dir="ltr">$\lor$</span></td>
+<td style="text-align: left;">Disjunction</td>
+<td style="text-align: left;"><span class="math-inline" dir="ltr">$p \lor q$</span></td>
+</tr>
+<tr>
+<td style="text-align: center;">شرطی</td>
+<td style="text-align: center;"><span class="math-inline" dir="ltr">$\to$</span></td>
+<td style="text-align: left;">Implication</td>
+<td style="text-align: left;"><span class="math-inline" dir="ltr">$p \to q$</span></td>
+</tr>
+<tr>
+<td style="text-align: center;">دوشرطی</td>
+<td style="text-align: center;"><span class="math-inline" dir="ltr">$\leftrightarrow$</span></td>
+<td style="text-align: left;">Biconditional</td>
+<td style="text-align: left;"><span class="math-inline" dir="ltr">$p \leftrightarrow q$</span></td>
+</tr>
+</tbody>
+</table>
+<h3 id="_9">جدول ارزش دمورگان</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;"><span class="math-inline" dir="ltr">$p$</span></th>
+<th style="text-align: center;"><span class="math-inline" dir="ltr">$q$</span></th>
+<th style="text-align: center;"><span class="math-inline" dir="ltr">$p \land q$</span></th>
+<th style="text-align: center;"><span class="math-inline" dir="ltr">$\neg(p \land q)$</span></th>
+<th style="text-align: center;"><span class="math-inline" dir="ltr">$\neg p$</span></th>
+<th style="text-align: center;"><span class="math-inline" dir="ltr">$\neg q$</span></th>
+<th style="text-align: center;"><span class="math-inline" dir="ltr">$(\neg p) \lor (\neg q)$</span></th>
+<th style="text-align: center;">برابر؟</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;">T</td>
+<td style="text-align: center;">T</td>
+<td style="text-align: center;">T</td>
+<td style="text-align: center;"><strong>F</strong></td>
+<td style="text-align: center;">F</td>
+<td style="text-align: center;">F</td>
+<td style="text-align: center;"><strong>F</strong></td>
+<td style="text-align: center;">✅</td>
+</tr>
+<tr>
+<td style="text-align: center;">T</td>
+<td style="text-align: center;">F</td>
+<td style="text-align: center;">F</td>
+<td style="text-align: center;"><strong>T</strong></td>
+<td style="text-align: center;">F</td>
+<td style="text-align: center;">T</td>
+<td style="text-align: center;"><strong>T</strong></td>
+<td style="text-align: center;">✅</td>
+</tr>
+<tr>
+<td style="text-align: center;">F</td>
+<td style="text-align: center;">T</td>
+<td style="text-align: center;">F</td>
+<td style="text-align: center;"><strong>T</strong></td>
+<td style="text-align: center;">T</td>
+<td style="text-align: center;">F</td>
+<td style="text-align: center;"><strong>T</strong></td>
+<td style="text-align: center;">✅</td>
+</tr>
+<tr>
+<td style="text-align: center;">F</td>
+<td style="text-align: center;">F</td>
+<td style="text-align: center;">F</td>
+<td style="text-align: center;"><strong>T</strong></td>
+<td style="text-align: center;">T</td>
+<td style="text-align: center;">T</td>
+<td style="text-align: center;"><strong>T</strong></td>
+<td style="text-align: center;">✅</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_10">جدول مقایسه‌ای — سیستم‌های اثبات</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">سیستم</th>
+<th style="text-align: left;">نوع</th>
+<th style="text-align: center;">تمامیت</th>
+<th style="text-align: center;">سازگاری</th>
+<th style="text-align: left;">کاربرد اصلی</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">هیلبرت (Hilbert)</td>
+<td style="text-align: left;">اصل‌موضوعی</td>
+<td style="text-align: center;">✅</td>
+<td style="text-align: center;">✅</td>
+<td style="text-align: left;">مبانی نظری</td>
+</tr>
+<tr>
+<td style="text-align: left;">استنتاج طبیعی (Natural Deduction)</td>
+<td style="text-align: left;">قاعده‌محور</td>
+<td style="text-align: center;">✅</td>
+<td style="text-align: center;">✅</td>
+<td style="text-align: left;">آموزش و اثبات دستی</td>
+</tr>
+<tr>
+<td style="text-align: left;">تابلو (Tableau)</td>
+<td style="text-align: left;">درختی</td>
+<td style="text-align: center;">✅</td>
+<td style="text-align: center;">✅</td>
+<td style="text-align: left;">اثبات خودکار</td>
+</tr>
+<tr>
+<td style="text-align: left;">رزولوشن (Resolution)</td>
+<td style="text-align: left;">مکانیزه</td>
+<td style="text-align: center;">✅*</td>
+<td style="text-align: center;">✅</td>
+<td style="text-align: left;">SAT Solvers</td>
+</tr>
+</tbody>
+</table>
+<p><em>*فقط برای فرم نرمال عطفی (CNF)</em></p>
+<hr />
+<h2 id="_11">۱. ۵ ریاضیات</h2>
+<h3 id="_12">فرمول درون‌خطی</h3>
+<p>قانون دمورگان بیان می‌کند: <span class="math-inline" dir="ltr">$\neg(p \land q) \equiv (\neg p) \lor (\neg q)$</span></p>
+<h3 id="_13">فرمول بلوکی</h3>
+<p><div class="math-block" dir="ltr">$$\neg \forall x\, P(x) \;\equiv\; \exists x\, \neg P(x)$$</div></p>
+<p><div class="math-block" dir="ltr">$$\sum_{k=0}^{\infty} \frac{x^k}{k!} = e^x$$</div></p>
+<p><div class="math-block" dir="ltr">$$\int_{-\infty}^{+\infty} e^{-x^2}\,dx = \sqrt{\pi}$$</div></p>
+<h3 id="_14">ماتریس</h3>
+<p><div class="math-block" dir="ltr">$$A = \begin{pmatrix}
+a_{11} & a_{12} & \cdots & a_{1n} \\
+a_{21} & a_{22} & \cdots & a_{2n} \\
+\vdots & \vdots & \ddots & \vdots \\
+a_{m1} & a_{m2} & \cdots & a_{mn}
+\end{pmatrix}$$</div></p>
+<h3 id="aligned">فرمول چندخطی (Aligned)</h3>
+<p><div class="math-block" dir="ltr">$$\begin{aligned}
+\mathcal{L}\{f(t)\} &= \int_{0}^{\infty} e^{-st} f(t)\,dt \\
+\hat{f}(\xi) &= \int_{-\infty}^{+\infty} f(x)\,e^{-2\pi i x\xi}\,dx \\
+\nabla \times \mathbf{E} &= -\frac{\partial \mathbf{B}}{\partial t}
+\end{aligned}$$</div></p>
+<h3 id="cases">حالت‌ها (Cases)</h3>
+<p><div class="math-block" dir="ltr">$$|x| = \begin{cases}
+x & \text{if } x \geq 0 \\
+-x & \text{if } x < 0
+\end{cases}$$</div></p>
+<hr />
+<h2 id="_15">۱. ۶ کد</h2>
+<h3 id="_16">کد درون‌خطی</h3>
+<p>از تابع <code>is_tautology()</code> برای بررسی تاتولوژی بودن استفاده کنید.</p>
+<h3 id="python">بلوک کد Python</h3>
+<p><pre><code class="language-python">from itertools import product
+
+def is_tautology(formula, variables):
+    &quot;&quot;&quot;Check if a propositional formula is a tautology.&quot;&quot;&quot;
+    for values in product([True, False], repeat=len(variables)):
+        env = dict(zip(variables, values))
+        if not formula(env):
+            return False
+    return True
+# Example: p ∨ ¬p
+result = is_tautology(
+    lambda e: e[&#x27;p&#x27;] or (not e[&#x27;p&#x27;]),
+    [&#x27;p&#x27;]
+)
+print(f&quot;p ∨ ¬p is tautology: {result}&quot;)  # True</code></pre></p>
+<h3 id="javascript">بلوک کد JavaScript</h3>
+<p><pre><code class="language-javascript">// Evaluate a simple propositional formula
+function evaluate(formula, env) {
+  return formula(env);
+}
+
+// De Morgan&#x27;s Law verification
+const deMorgan = (env) =&gt; {
+  const { p, q } = env;
+  const left = !(p &amp;&amp; q);
+  const right = (!p) || (!q);
+  return left === right;
+};
+console.log(evaluate(deMorgan, { p: true, q: false })); // true</code></pre></p>
+<h3 id="latex">بلوک کد LaTeX</h3>
+<p><pre><code class="language-latex">\begin{theorem}{قانون دمورگان}{demorgan}
+  برای هر دو گزاره $p$ و $q$:
+  $$
+\begin{aligned}
+\neg(p \land q) &amp;\equiv (\neg p) \lor (\neg q) \\
+    \neg(p \lor q)  &amp;\equiv (\neg p) \land (\neg q)
+\end{aligned}
+$$
+
+\end{theorem}</code></pre></p>
+<h3 id="line-highlighting">بلوک کد با نشانه‌گذاری خط (Line Highlighting)</h3>
+<p>```python {1,3-5}</p>
+<h1 id="_17">خط ۱: ایمپورت</h1>
+<p>from itertools import product</p>
+<h1 id="-">خط ۳-۵: تابع اصلی</h1>
+<p>def check(f, vars):
+    return all(f(dict(zip(vars, v)))
+               for v in product([True, False], repeat=len(vars)))</p>
+<p><pre><code>---
+
+## ۱. ۷ تصاویر
+
+### تصویر ساده
+
+&lt;Image src=&quot;https://via.placeholder.com/600x300/1A73E8/FFFFFF?text=Mathematical+Logic+Diagram &quot;نمودار منطق ریاضی&quot;&quot; alt=&quot;نمودار منطق ریاضی&quot; /&gt;
+
+### تصویر با اندازه مشخص (در MDX)
+
+
+
+&lt;Image src=&quot;https://via.placeholder.com/400x400/00897B/FFFFFF?text=Mind+Map &quot;نقشه ذهنی شاخه‌های منطق ریاضی&quot;&quot; alt=&quot;نقشه ذهنی منطق&quot; /&gt;
+
+---
+
+## ۱. ۸ خطوط افقی و جداکننده‌ها
+
+بخش قبلی
+
+---
+
+بخش بعدی
+
+***
+
+بخش پایانی
+
+---
+
+## ۱. ۹ HTML درون مارک‌داون
+
+&lt;div dir=&quot;rtl&quot; style=&quot;background: #E3F2FD; padding: 16px; border-right: 4px solid #1A73E8; border-radius: 4px; margin: 16px 0&quot;&gt;
+  &lt;strong&gt;📌 نکته مهم:&lt;/strong&gt;
+  این یک بلوک HTML درون مارک‌داون است که برای تست رندر HTML
+  در تبدیل‌گر استفاده می‌شود. متن فارسی با
+  &lt;code&gt;dir=&quot;rtl&quot;&lt;/code&gt;
+  تنظیم شده است.
+&lt;details&gt;
+&lt;summary&gt;&lt;strong&gt;جزئیات اثبات (کلیک کنید)&lt;/strong&gt;&lt;/summary&gt;
+
+این بخش یک عنصر تاشو (`details/summary`) است.
+در اینجا می‌توان اثبات مفصلی قرار داد:
+
+$$
+\neg(p \land q) \equiv (\neg p) \lor (\neg q)
+$$
+
+**اثبات: ** با جدول ارزش تمامی ۴ حالت را بررسی می‌کنیم. ✅
+
+&lt;/details&gt;
+
+&lt;strong&gt;⚠ Warning (English Block):&lt;/strong&gt;
+  This is a left-to-right HTML block inside a primarily RTL document,
+  used to test bidirectional rendering in the MDX converter.
+---
+
+# ۲. نمودارهای Mermaid
+
+&gt; **⚠ محدودیت فارسی در Mermaid: **
+&gt; برخی انواع نمودارها (مانند Pie Chart و بعضی حالت‌های Mindmap) مشکلاتی با متن فارسی RTL دارند. در این موارد **راه‌حل‌ها** و **جایگزین‌ها** ذکر شده‌اند.
+
+---
+
+## ۲. ۱ فلوچارت (Flowchart) — فارسی
+
+
+
+PROTECTED_BLOCK_0_ENDBLOCK
+
+
+## ۲. ۲ فلوچارت (Flowchart) — انگلیسی
+
+
+
+PROTECTED_BLOCK_1_ENDBLOCK
+
+
+## ۲. ۳ نمودار ترتیبی (Sequence Diagram) — فارسی
+
+
+
+PROTECTED_BLOCK_2_ENDBLOCK
+
+
+
+## ۲. ۴ نمودار ترتیبی (Sequence Diagram) — انگلیسی
+
+
+
+PROTECTED_BLOCK_3_ENDBLOCK
+
+
+## ۲. ۵ نمودار کلاسی (Class Diagram)
+
+
+
+PROTECTED_BLOCK_4_ENDBLOCK
+
+
+## ۲. ۶ نمودار وضعیت (State Diagram) — فارسی
+
+
+
+PROTECTED_BLOCK_5_ENDBLOCK
+
+
+
+## ۲. ۷ نمودار گانت (Gantt Chart)
+
+
+
+PROTECTED_BLOCK_6_ENDBLOCK
+
+
+
+## ۲. ۸ نمودار ER (Entity Relationship)
+
+
+
+PROTECTED_BLOCK_7_ENDBLOCK
+
+
+
+## ۲. ۹ نمودار سفر کاربر (User Journey)
+
+
+
+PROTECTED_BLOCK_8_ENDBLOCK
+
+
+
+## ۲. ۱۰ نمودار Git Graph
+
+
+
+PROTECTED_BLOCK_9_ENDBLOCK
+
+
+
+## ۲. ۱۱ نمودار دایره‌ای (Pie Chart)
+
+&gt; **⚠ محدودیت فارسی: ** نمودار Pie در Mermaid با متن فارسی ممکن است مشکل رندر داشته باشد. در صورت بروز مشکل، از لیبل‌های انگلیسی استفاده کنید.
+
+### نسخه انگلیسی (مطمئن)
+
+
+
+PROTECTED_BLOCK_10_ENDBLOCK
+
+
+
+### نسخه فارسی (ممکن است نیاز به تنظیم فونت داشته باشد)
+
+
+
+PROTECTED_BLOCK_11_ENDBLOCK
+
+
+
+## ۲. ۱۲ نمودار Requirement
+
+
+
+PROTECTED_BLOCK_12_ENDBLOCK
+
+
+## ۲. ۱۳ نمودار C4 (معماری نرم‌افزار)
+
+
+
+PROTECTED_BLOCK_13_ENDBLOCK
+
+
+## ۲. ۱۴ نمودار Mindmap
+
+&gt; **⚠ محدودیت: ** Mindmap در Mermaid نسبتاً جدید است و ممکن است با متون فارسی مشکل داشته باشد.
+
+### نسخه انگلیسی (مطمئن)
+
+
+
+PROTECTED_BLOCK_14_ENDBLOCK
+
+
+
+### نسخه فارسی (تجربی)
+
+
+
+PROTECTED_BLOCK_15_ENDBLOCK
+
+
+
+## ۲. ۱۵ نمودار Timeline
+
+
+
+PROTECTED_BLOCK_16_ENDBLOCK
+
+
+
+## ۲. ۱۶ نمودار Quadrant Chart
+
+
+
+PROTECTED_BLOCK_17_ENDBLOCK
+
+
+
+## ۲. ۱۷ نمودار XY Chart
+
+
+
+PROTECTED_BLOCK_18_ENDBLOCK
+
+
+
+## ۲. ۱۸ نمودار Block (تجربی)
+
+
+
+PROTECTED_BLOCK_19_ENDBLOCK
+
+
+---
+
+# ۳. عناصر ترکیبی
+
+## ۳. ۱ جدول + ریاضی + کد
+
+| ردیف | فرمول | نتیجه | کد معادل |
+|: ----: |: ------|: -----: |: ---------|
+| ۱ | $p \lor \neg p$ | تاتولوژی ✅ | `p or (not p)` |
+| ۲ | $p \land \neg p$ | تناقض ❌ | `p and (not p)` |
+| ۳ | $p \to (q \to p)$ | تاتولوژی ✅ | `(not p) or ((not q) or p)` |
+| ۴ | $(p \to q) \land (q \to r) \to (p \to r)$ | تاتولوژی ✅ | قانون تعدی |
+
+## ۳. ۲ نقل‌قول تو در تو + ریاضی
+
+&gt; **قضیه (دمورگان): **
+&gt; برای هر $p, q$:
+&gt; $$\neg(p \land q) \equiv (\neg p) \lor (\neg q)$$
+
+&gt;
+&gt; &gt; **اثبات: **
+&gt; &gt; کافی است جدول ارزش هر چهار حالت ممکن را بسازیم.
+&gt; &gt; در تمامی حالات، دو طرف هم‌ارز هستند. $\blacksquare$
+
+---
+
+# ۴. پاورقی‌ها (Footnotes)
+
+منطق ریاضی[^1] شاخه‌ای از ریاضیات است که به مطالعه صوری استدلال می‌پردازد.
+
+قضیه ناتمامیت گودل[^2] یکی از مهم‌ترین نتایج قرن بیستم است.
+
+نیم‌فاصله[^3] در تایپ فارسی اهمیت زیادی دارد.
+
+[^1]: Mathematical Logic — شاخه‌ای که در آن از زبان‌های صوری برای بیان و بررسی استدلال‌ها استفاده می‌شود.
+[^2]: Kurt Gödel, &quot;Über formal unentscheidbare Sätze der Principia Mathematica und verwandter Systeme I&quot; (1931). این قضیه نشان می‌دهد که در هر سیستم صوری سازگار و به‌اندازه کافی قوی، گزاره‌های اثبات‌ناپذیر وجود دارند.
+[^3]: نیم‌فاصله (Zero-Width Non-Joiner, U+200C) کاراکتری نامرئی است که در فارسی بین پیشوند/پسوند و ریشه قرار می‌گیرد: «می‌روم»، «کتاب‌ها»، «نمی‌دانم».
+
+---
+
+# ۵. تعریف واژگان (Definition List)
+
+&gt; **نکته: ** مارک‌داون استاندارد از Definition List پشتیبانی نمی‌کند، اما برخی تبدیل‌گرها (مانند `markdown-it-deflist`) آن را دارند.
+
+تاتولوژی (Tautology): گزاره‌ای مرکب که تحت هر تخصیص ارزش، درست است.
+
+تناقض (Contradiction): گزاره‌ای مرکب که تحت هر تخصیص ارزش، نادرست است.
+
+اقناع‌پذیر (Satisfiable): گزاره‌ای مرکب که حداقل یک تخصیص ارزش وجود دارد که آن را درست کند.
+
+---
+
+# ۶. اختصارات و Emoji
+
+| Emoji | معنی | کاربرد |
+|: -----: |: -----|: -------|
+| ✅ | درست / موفق | تاتولوژی |
+| ❌ | نادرست / ناموفق | تناقض |
+| ⚠️ | هشدار | محدودیت |
+| 💡 | نکته | راهنمایی |
+| 📌 | مهم | نکته حیاتی |
+| 🔗 | لینک | ارجاع |
+| 📊 | نمودار | آمار |
+| 🧮 | محاسبه | ارزیابی |
+| 📝 | یادداشت | توضیح |
+
+---
+
+# ۷. محتوای دوزبانه (Bilingual)
+
+## ۷. ۱ پاراگراف ترکیبی
+
+در منطق ریاضی (Mathematical Logic)، یک **گزاره** (Proposition) جمله‌ای خبری است که دقیقاً یکی از دو ارزش **درست** (True, $\top$) یا **نادرست** (False, $\bot$) را دارد. این مفهوم پایه‌ای‌ترین واحد در **منطق گزاره‌ای** (Propositional Logic) است.
+
+## ۷. ۲ بلوک انگلیسی درون سند فارسی
+
+### Definition (Tautology)
+A compound proposition $\varphi$ is a **tautology** if and only if it evaluates to **true** under every possible truth assignment:
+$$
+\models \varphi \iff \forall\, v : v(\varphi) = \top
+$$
+
+**Example: ** $p \lor \neg p$ is a tautology (Law of Excluded Middle).
+---
+
+# ۸. Admonitions / Callouts
+&lt;Admonition type=&quot;note&quot;&gt;
+
+**نکته: ** در MDX معمولاً از کامپوننت‌های سفارشی برای Admonition استفاده می‌شود. این بخش برای تست تبدیل این قالب‌هاست.
+
+&lt;/Admonition&gt;
+
+&lt;Admonition type=&quot;tip&quot;&gt;
+
+**راهنمایی: ** برای رندر صحیح ریاضیات در MDX، از KaTeX یا MathJax استفاده کنید.
+
+&lt;/Admonition&gt;
+
+&lt;Admonition type=&quot;warning&quot;&gt;
+
+**هشدار: ** فونت فارسی در نمودارهای Mermaid ممکن است در برخی مرورگرها به‌درستی نمایش داده نشود.
+
+&lt;/Admonition&gt;
+
+&lt;Admonition type=&quot;caution&quot;&gt;
+
+**احتیاط: ** قبل از تبدیل، مطمئن شوید که encoding فایل UTF-8 with BOM است.
+
+&lt;/Admonition&gt;
+
+&lt;Admonition type=&quot;important&quot;&gt;
+
+**مهم: ** بسته `xepersian` باید **آخرین** بسته بارگذاری‌شده در LaTeX باشد.
+
+&lt;/Admonition&gt;
+
+---
+
+# ۹. فرمول‌های ریاضی پیشرفته
+
+## ۹. ۱ محیط اثبات
+
+**Theorem (De Morgan&#x27;s Laws). ** For any propositions $p$ and $q$:
+$$
+\neg(p \land q) \equiv (\neg p) \lor (\neg q)
+$$
+
+*Proof. * We construct the truth table:
+| $p$ | $q$ | $\neg(p \land q)$ | $(\neg p) \lor (\neg q)$ |
+|: ---: |: ---: |: ---: |: ---: |
+| T | T | F | F |
+| T | F | T | T |
+| F | T | T | T |
+| F | F | T | T |
+Since the columns are identical, the equivalence holds. $\blacksquare$
+## ۹. ۲ زنجیره استدلال
+
+$$
+\begin{aligned}
+&amp;\text{۱. } p \to q &amp;&amp;\text{(فرض)} \\
+&amp;\text{۲. } q \to r &amp;&amp;\text{(فرض)} \\
+&amp;\text{۳. } p &amp;&amp;\text{(فرض)} \\
+&amp;\text{۴. } q &amp;&amp;\text{(حذف شرطی: ۱، ۳)} \\
+&amp;\text{۵. } r &amp;&amp;\text{(حذف شرطی: ۲، ۴)} \\
+&amp;\text{۶. } p \to r &amp;&amp;\text{(معرفی شرطی: ۳–۵)} \\
+\end{aligned}
+$$
+
+## ۹. ۳ استقراء ریاضی
+
+**قضیه: ** برای هر $n \in \mathbb{N}$:
+
+$$
+\sum_{k=1}^{n} k = \frac{n(n+1)}{2}
+$$
+
+**اثبات به روش استقراء: **
+
+**پایه: ** برای $n = 1$:
+
+$$
+\sum_{k=1}^{1} k = 1 = \frac{1 \cdot 2}{2} \quad\checkmark
+$$
+
+**گام استقراء: ** فرض کنید برای $n = m$ برقرار است:
+
+$$
+\sum_{k=1}^{m} k = \frac{m(m+1)}{2} \quad\text{(فرض استقراء)}
+$$
+
+باید برای $n = m + 1$ نشان دهیم:
+
+$$
+\begin{aligned}
+\sum_{k=1}^{m+1} k &amp;= \left(\sum_{k=1}^{m} k\right) + (m+1) \\
+&amp;= \frac{m(m+1)}{2} + (m+1) \quad\text{(فرض استقراء)} \\
+&amp;= \frac{m(m+1) + 2(m+1)}{2} \\
+&amp;= \frac{(m+1)(m+2)}{2} \quad\blacksquare
+\end{aligned}
+$$
+
+## ۹. ۴ فرمول‌های نظریه مجموعه‌ها
+
+$$
+\begin{aligned}
+A \cup B &amp;= \{x \mid x \in A \lor x \in B\} \\
+A \cap B &amp;= \{x \mid x \in A \land x \in B\} \\
+A \setminus B &amp;= \{x \mid x \in A \land x \notin B\} \\
+\mathcal{P}(A) &amp;= \{S \mid S \subseteq A\} \\
+|A \cup B| &amp;= |A| + |B| - |A \cap B|
+\end{aligned}
+$$
+
+## ۹. ۵ سری و حد
+
+$$
+\lim_{n \to \infty} \left(1 + \frac{1}{n}\right)^n = e
+$$
+
+$$
+\prod_{p \text{ prime}} \frac{1}{1 - p^{-s}} = \sum_{n=1}^{\infty} \frac{1}{n^s} = \zeta(s) \quad\text{(تابع زتای ریمان)}
+$$
+
+## ۹. ۶ فرمول‌های منطق محمولات مرتبه اول
+
+$$
+\forall x\, \forall y\, \big[(x \in y) \to \exists z\, (z \in y \land z \subseteq x)\big]
+$$
+
+$$
+\underbrace{
+  \forall \epsilon &gt; 0\;\; \exists \delta &gt; 0\;\; \forall x\;\;
+  \Big(0 &lt; |x - a| &lt; \delta \implies |f(x) - L| &lt; \epsilon\Big)
+}_{\text{تعریف دقیق حد (اپسیلون-دلتا)}}
+$$
+
+---
+
+# ۱۰. راهنمای فنی مارک‌داون فارسی برای وب
+
+&gt; **📌 این بخش هم محتوای آموزشی است و هم بخشی از تست تبدیل فرمت. **
+
+---
+
+## ۱۰. ۱ تنظیمات پایه RTL
+
+### الف) در سطح HTML
+
+هر صفحه فارسی باید دارای این ویژگی‌ها باشد:</code></pre></p>
+<p>html</p>
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charSet="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+</head>
+<body>
+
+</body>
+</html>
+
+<p><pre><code>### ب) در سطح MDX Front Matter</code></pre></p>
+<h2 id="yaml">yaml</h2>
+<p>lang: "fa"
+dir: "rtl"</p>
+<hr />
+<p><pre><code>### ج) در سطح CSS</code></pre></p>
+<p>css
+/<em> تنظیمات پایه RTL </em>/
+:root {
+  --font-fa: 'Vazirmatn', 'IRANSans', 'Tahoma', sans-serif;
+  --font-en: 'Inter', 'Segoe UI', sans-serif;
+  --font-mono: 'Fira Code', 'JetBrains Mono', monospace;
+}</p>
+<p>html[dir="rtl"] {
+  font-family: var(--font-fa);
+  line-height: 1.8;
+  text-align: right;
+}</p>
+<p>/<em> عناصر LTR درون RTL </em>/
+code, pre, .math-display, .mermaid {
+  direction: ltr;
+  text-align: left;
+  unicode-bidi: isolate;
+}</p>
+<p>/<em> جداول </em>/
+html[dir="rtl"] table {
+  direction: rtl;
+}</p>
+<p>html[dir="rtl"] table th,
+html[dir="rtl"] table td {
+  text-align: right;
+}</p>
+<p>/<em> نقل‌قول </em>/
+html[dir="rtl"] blockquote {
+  border-right: 4px solid #1A73E8;
+  border-left: none;
+  padding-right: 16px;
+  padding-left: 0;
+  margin-right: 0;
+}</p>
+<p>/<em> لیست‌ها </em>/
+html[dir="rtl"] ul,
+html[dir="rtl"] ol {
+  padding-right: 2em;
+  padding-left: 0;
+}</p>
+<p>/<em> پانوشت‌ها </em>/
+html[dir="rtl"] .footnotes {
+  direction: rtl;
+  border-top: 1px solid #ccc;
+  margin-top: 2rem;
+  padding-top: 1rem;
+}</p>
+<p><pre><code>---
+
+## ۱۰. ۲ فونت‌های پیشنهادی
+
+| فونت | نوع | وزن‌ها | مناسب برای | لینک |
+|: -----|: ----|: ------: |: ----------|: -----|
+| Vazirmatn | Sans-serif | 100–900 | متن اصلی وب | [GitHub](https://github.com/rastikerdar/vazirmatn) |
+| Sahel | Sans-serif | 300–900 | عناوین | [GitHub](https://github.com/rastikerdar/sahel-font) |
+| Shabnam | Sans-serif | 200–900 | متن اصلی | [GitHub](https://github.com/rastikerdar/shabnam-font) |
+| Samim | Sans-serif | Normal, Bold | UI | [GitHub](https://github.com/rastikerdar/samim-font) |
+| IRANSans | Sans-serif | متعدد | حرفه‌ای (تجاری) | [fontiran. com](https://fontiran.com) |
+| Parastoo | Serif | Normal, Bold | کتاب | [GitHub](https://github.com/rastikerdar/parastoo-font) |
+| Gandom | Serif | Normal | مقاله | [GitHub](https://github.com/rastikerdar/gandom-font) |
+
+### بارگذاری فونت</code></pre></p>
+<p>css
+/<em> روش ۱: از CDN </em>/
+@import url('https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css');</p>
+<p>/<em> روش ۲: Self-hosted (پیشنهادی برای عملکرد) </em>/
+@font-face {
+  font-family: 'Vazirmatn';
+  src: url('/fonts/Vazirmatn-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}</p>
+<p>@font-face {
+  font-family: 'Vazirmatn';
+  src: url('/fonts/Vazirmatn-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}</p>
+<p><pre><code>---
+
+## ۱۰. ۳ رندر ریاضیات در MDX
+
+### الف) KaTeX (سریع‌تر — پیشنهادی)</code></pre></p>
+<p>bash
+npm install rehype-katex remark-math katex</p>
+<p><pre><code></code></pre></p>
+<p>javascript
+// next.config.js (Next.js) یا تنظیمات MDX</p>
+<p>const mdxOptions = {
+  remarkPlugins: [remarkMath],
+  rehypePlugins: [rehypeKatex],
+};</p>
+<p><pre><code></code></pre></p>
+<p>html</p>
+<p><link
+  rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" /></p>
+<p><pre><code>### ب) MathJax (قابلیت بیشتر — سنگین‌تر)</code></pre></p>
+<p>html</p>
+<script>
+  MathJax = {
+    tex: {
+      inlineMath: [['<span class="math-inline" dir="ltr">$', '$</span>'], ['\<span class="math-inline" dir="ltr">$', '\$</span>']],
+      displayMath: [['
+
+<div class="math-block" dir="ltr">$$', '$$</div>
+
+
+
+</div>'], ['\\[', '\\]']],
+    },
+    svg: { fontCache: 'global' },
+  };
+</script>
+<p><script
+  id="MathJax-script"
+  async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"
+></script>
+</p>
+<p><pre><code>### مقایسه KaTeX و MathJax
+
+| ویژگی | KaTeX | MathJax |
+|: ------|: -----: |: -------: |
+| سرعت رندر | ⚡ بسیار سریع | 🐌 کندتر |
+| حجم بسته | ~300KB | ~1MB+ |
+| SSR | ✅ | ⚠️ محدود |
+| پوشش فرمول | ۹۰٪+ | ۹۹٪+ |
+| فرمول‌های پیچیده | ⚠️ برخی ندارد | ✅ کامل |
+| Accessibility | ✅ | ✅ |
+
+---
+
+## ۱۰. ۴ رندر Mermaid در MDX
+
+### نصب و تنظیم</code></pre></p>
+<p>bash
+npm install mermaid</p>
+<h1 id="mdx">یا برای MDX</h1>
+<p>npm install rehype-mermaid</p>
+<p><pre><code>### کامپوننت React برای Mermaid</code></pre></p>
+<p>jsx
+// components/Mermaid.jsx
+'use client';</p>
+<p>export default function MermaidDiagram({ chart, id }) {
+  const ref = useRef(null);
+  const [svg, setSvg] = useState('');
+useEffect(() =&gt; {
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: 'base',
+      themeVariables: {
+        fontFamily: 'Vazirmatn, sans-serif',
+        fontSize: '14px',
+      },
+      flowchart: { htmlLabels: true, curve: 'basis' },
+      securityLevel: 'loose',
+    });
+const render = async () =&gt; {
+      const uniqueId = id || <code>mermaid-${Date.now()}</code>;
+      try {
+        const { svg } = await mermaid.render(uniqueId, chart);
+        setSvg(svg);
+      } catch (e) {
+        console.error('Mermaid render error:', e);
+      }
+    };
+render();
+  }, [chart, id]);
+return (</p>
+<p><div
+      ref={ref}
+      className="mermaid-container"
+      style="direction: ltr; text-align: center"
+      dangerouslySetInnerHTML={{ __html: svg }}
+    />
+  );
+}
+
+
+PROTECTED_BLOCK_33_ENDBLOCK
+
+mdx
+
+
+
+PROTECTED_BLOCK_40_ENDBLOCK
+
+
+
+
+PROTECTED_BLOCK_34_ENDBLOCK
+
+javascript
+// تنظیم Mermaid برای پشتیبانی بهتر فارسی
+mermaid.initialize({
+  theme: 'base',
+  themeVariables: {
+    // فونت فارسی
+    fontFamily: '"Vazirmatn", "Tahoma", sans-serif',
+    fontSize: '14px',
+  },
+  flowchart: {
+    // استفاده از HTML labels (ضروری برای فارسی)
+    htmlLabels: true,
+    curve: 'basis',
+  },
+  sequence: {
+    // آینه نکردن بازیگران
+    mirrorActors: false,
+  },
+  // اجازه HTML (برای dir="rtl")
+  securityLevel: 'loose',
+});
+
+
+PROTECTED_BLOCK_35_ENDBLOCK
+
+css
+/* کانتینر Mermaid */
+.mermaid-container {
+  direction: ltr;         /* نمودار همیشه LTR */
+  text-align: center;
+  margin: 2rem 0;
+  overflow-x: auto;
+}
+
+/* متن فارسی درون نمودار */
+.mermaid-container text,
+.mermaid-container .nodeLabel,
+.mermaid-container .edgeLabel,
+.mermaid-container .label {
+  font-family: 'Vazirmatn', 'Tahoma', sans-serif !important;
+  direction: rtl;
+  unicode-bidi: embed;
+}
+
+/* اندازه واکنش‌گرا */
+.mermaid-container svg {
+  max-width: 100%;
+  height: auto;
+}
+
+
+PROTECTED_BLOCK_36_ENDBLOCK
+
+bash
+# بررسی encoding فایل (Linux/macOS)
+file -bi document.md
+# خروجی مطلوب: text/plain; charset=utf-8
+
+# تبدیل encoding (اگر لازم بود)
+iconv -f windows-1256 -t utf-8 input.md > output.md
+
+
+PROTECTED_BLOCK_37_ENDBLOCK
+
+powershell
+# بررسی encoding
+[System.IO.File]::ReadAllBytes("document.md")[0..2]
+# اگر EF BB BF باشد: UTF-8 with BOM ✅
+
+# ذخیره با UTF-8 BOM
+$content = Get-Content "document.md" -Raw
+[System.IO.File]::WriteAllText(
+    "document.md",
+    $content,
+    [System.Text.UTF8Encoding]::new($true)
+)
+
+
+PROTECTED_BLOCK_38_ENDBLOCK
+
+
+project/
+├── content/
+│   ├── posts/
+│   │   ├── mathematical-logic/
+│   │   │   ├── index.mdx          ← محتوای اصلی
+│   │   │   ├── components.jsx     ← کامپوننت‌های سفارشی
+│   │   │   └── assets/
+│   │   │       ├── diagram.svg
+│   │   │       └── proof-tree.png
+│   │   └── de-morgan/
+│   │       └── index.mdx
+│   └── books/
+│       └── logic-foundations/
+│           ├── chapter-01.mdx
+│           ├── chapter-02.mdx
+│           └── bibliography.json
+├── components/
+│   ├── Mermaid.jsx
+│   ├── MathBlock.jsx
+│   ├── Proof.jsx
+│   ├── Theorem.jsx
+│   ├── Definition.jsx
+│   ├── Admonition.jsx
+│   └── BilingualBlock.jsx
+├── styles/
+│   ├── rtl.css
+│   ├── math.css
+│   └── mermaid.css
+└── lib/
+    └── mdx-config.js
+
+
+PROTECTED_BLOCK_39_ENDBLOCK
+
+mdx
+---
+title: "قانون دمورگان"
+description: "اثبات و توضیح قوانین دمورگان"
+author: "علی محمدی"
+date: "2025-07-13"
+lang: "fa"
+dir: "rtl"
+tags: ["منطق", "دمورگان", "اثبات"]
+math: true
+mermaid: true
+---
+
+import Theorem from '@/components/Theorem';
+
+# قانون دمورگان
+
+
+
+PROTECTED_BLOCK_52_ENDBLOCK
+
+
+
+
+
+PROTECTED_BLOCK_51_ENDBLOCK
+
+
+
+
+
+PROTECTED_BLOCK_53_ENDBLOCK
+
+
+
+
+
+PROTECTED_BLOCK_41_ENDBLOCK
+
+
+```
+
+---
+
+## ۱۰. ۱۰ چک‌لیست نهایی تبدیل MD/LaTeX به MDX
+
+- [ ] **Encoding: ** فایل خروجی UTF-8 (ترجیحاً با BOM) است
+- [ ] **Front Matter: ** متادیتا (`title`, `lang`, `dir`) صحیح منتقل شده
+- [ ] **RTL: ** جهت متن فارسی حفظ شده (`dir="rtl"`)
+- [ ] **نیم‌فاصله: ** کاراکتر ZWNJ حفظ شده (حذف نشده)
+- [ ] **ریاضی Inline: ** فرمول‌های `<span class="math-inline" dir="ltr">$...$</span>` صحیح رندر می‌شوند
+- [ ] **ریاضی Block: ** فرمول‌های `
+
+PROTECTED_BLOCK_50_ENDBLOCK
+
+
+
+</div></p>
+<p>` صحیح رندر می‌شوند
+- [ ] <strong>ریاضی پیچیده: ** ماتریس، cases، aligned صحیح‌اند
+- [ ] </strong>جداول: ** تمامی جداول با ستون‌بندی صحیح نمایش می‌شوند
+- [ ] <strong>تصاویر: ** آدرس تصاویر صحیح و alt text حفظ شده
+- [ ] </strong>لینک‌ها: ** لینک‌های داخلی و خارجی کار می‌کنند
+- [ ] <strong>کد: ** بلوک‌های کد با syntax highlighting رندر می‌شوند
+- [ ] </strong>Mermaid: ** نمودارها صحیح رندر می‌شوند
+- [ ] <strong>پاورقی: ** footnote ها صحیح نمایش می‌شوند
+- [ ] </strong>Admonitions: ** جعبه‌های هشدار/نکته تبدیل شده‌اند
+- [ ] <strong>ارجاعات: ** cross-reference ها کار می‌کنند
+- [ ] </strong>کتاب‌نامه: ** bibliography منتقل شده
+- [ ] <strong>دوزبانه: ** بلوک‌های LTR درون RTL صحیح‌اند
+- [ ] </strong>Emoji: ** ایموجی‌ها صحیح نمایش داده می‌شوند
+- [ ] <strong>HTML: ** بلوک‌های HTML درون MD حفظ شده‌اند
+- [ ] </strong>تصاویر کنار متن: ** wrapfigure به layout مناسب تبدیل شده
+- [ ] **فهرست مطالب: ** TOC تولید شده</p>
+<hr />
+<h1 id="_18">۱۱. نتیجه‌گیری</h1>
+<p>این سند شامل <strong>تمامی عناصر</strong> مورد نیاز برای تست جامع تبدیل‌گر فرمت بود:</p>
+<h3 id="_19">عناصر متنی</h3>
+<p>✅ عناوین (H1–H6) · ✅ پاراگراف · ✅ Bold/Italic/Strikethrough
+✅ لینک · ✅ کد درون‌خطی · ✅ نقل‌قول · ✅ خط افقی</p>
+<h3 id="_20">عناصر ساختاری</h3>
+<p>✅ لیست مرتب/نامرتب · ✅ Task List · ✅ جدول · ✅ Definition List
+✅ پاورقی · ✅ Front Matter · ✅ Admonitions/Callouts</p>
+<h3 id="_21">عناصر رسانه‌ای</h3>
+<p>✅ تصویر · ✅ نمودار Mermaid (۱۸ نوع) · ✅ فرمول ریاضی</p>
+<h3 id="_22">عناصر تخصصی</h3>
+<p>✅ کد (Python/JS/LaTeX/Bash/CSS/HTML) · ✅ HTML درون MD
+✅ بلوک تاشو · ✅ Emoji · ✅ محتوای دوزبانه</p>
+<h3 id="_23">عناصر فارسی</h3>
+<p>✅ RTL · ✅ نیم‌فاصله · ✅ اعداد فارسی · ✅ گیومه «»
+✅ فونت فارسی · ✅ بلوک LTR درون RTL</p>
+<hr />
+<blockquote>
+<p><strong>✍️ نویسنده: ** تیم تست تبدیل فرمت
+</strong>📅 تاریخ: ** تیر ۱۴۰۴ — July 2025
+<strong>🔗 مخزن: ** <a href="https://github.com/example/format-converter">github. com/example/format-converter</a>
+</strong>📜 مجوز: ** MIT License</p>
+</blockquote>
+    </article>
+</body>
+</html>

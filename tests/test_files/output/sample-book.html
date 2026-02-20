@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{}\$$0.5cm] {مبانی منطق ریاضی و اثبات‌های صوری} {Foundations of Mathematical Logic and Formal Proofs} {}</title>
+
+    <!-- Vazirmatn font for Persian -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" />
+
+    <!-- KaTeX for math rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" />
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+        onload="renderMathInElement(document.body, {
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false}
+            ],
+            throwOnError: false
+        });"></script>
+
+    <!-- Mermaid for diagrams -->
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: { htmlLabels: true, useMaxWidth: true },
+            securityLevel: 'loose',
+        });
+    </script>
+
+    <!-- Highlight.js for code -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.10.0/build/styles/github.min.css" />
+    <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.10.0/build/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
+
+    <style>
+        :root {
+            --bg: #ffffff;
+            --text: #1a1a1a;
+            --code-bg: #f6f8fa;
+            --border: #d0d7de;
+            --accent: #0969da;
+            --accent-light: #ddf4ff;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Vazirmatn', 'Segoe UI', Tahoma, sans-serif;
+            line-height: 1.9;
+            color: var(--text);
+            background: var(--bg);
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 2rem 2.5rem;
+            direction: rtl;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            margin: 1.8em 0 0.6em;
+            line-height: 1.35;
+            font-weight: 700;
+        }
+        h1 { font-size: 2rem; border-bottom: 2px solid var(--accent); padding-bottom: 0.4em; }
+        h2 { font-size: 1.65rem; border-bottom: 1px solid var(--border); padding-bottom: 0.3em; }
+        h3 { font-size: 1.35rem; }
+        h4 { font-size: 1.15rem; }
+        p { margin: 0.8em 0; }
+
+        /* Code */
+        pre {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem 1.2rem;
+            overflow-x: auto;
+            direction: ltr;
+            text-align: left;
+            margin: 1.2em 0;
+            font-size: 0.88em;
+        }
+        code {
+            font-family: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace;
+            font-size: 0.9em;
+        }
+        :not(pre) > code {
+            background: var(--code-bg);
+            padding: 0.15em 0.4em;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+        }
+
+        /* Mermaid diagrams */
+        pre.mermaid {
+            background: #fff;
+            border: 2px solid #e1e4e8;
+            border-radius: 10px;
+            padding: 1.5rem;
+            text-align: center;
+            direction: ltr;
+        }
+
+        /* Math */
+        .math-block {
+            direction: ltr;
+            text-align: center;
+            margin: 1.5em 0;
+            padding: 1em;
+            background: #fafbfc;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+        .math-inline {
+            direction: ltr;
+            unicode-bidi: isolate;
+        }
+
+        /* Blockquote */
+        blockquote {
+            border-right: 4px solid var(--accent);
+            padding: 0.6em 1.2em;
+            margin: 1.2em 0;
+            background: var(--accent-light);
+            border-radius: 0 6px 6px 0;
+            color: #24292f;
+        }
+        blockquote p { margin: 0.4em 0; }
+
+        /* Tables */
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1.2em 0;
+            font-size: 0.95em;
+        }
+        th, td {
+            border: 1px solid var(--border);
+            padding: 0.6em 1em;
+            text-align: right;
+        }
+        th { background: var(--code-bg); font-weight: 600; }
+        tr:nth-child(even) { background: #f6f8fa; }
+
+        /* Images & figures */
+        img { max-width: 100%; height: auto; border-radius: 6px; }
+        figure { margin: 1.5em 0; text-align: center; }
+        figcaption { color: #57606a; font-size: 0.9em; margin-top: 0.5em; }
+
+        /* Links */
+        a { color: var(--accent); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        /* Lists */
+        ul, ol { margin: 0.8em 0; padding-right: 2em; }
+        li { margin: 0.3em 0; }
+        li > ul, li > ol { margin: 0.2em 0; }
+
+        hr { border: none; border-top: 1px solid var(--border); margin: 2.5em 0; }
+
+        /* Admonitions */
+        .admonition {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1em 1.2em;
+            margin: 1.2em 0;
+        }
+        .admonition-title {
+            font-weight: 700;
+            margin-bottom: 0.5em;
+            text-transform: capitalize;
+        }
+        .admonition-note { border-right: 4px solid #0969da; background: #ddf4ff; }
+        .admonition-warning { border-right: 4px solid #d4a72c; background: #fff8c5; }
+        .admonition-tip { border-right: 4px solid #1a7f37; background: #dafbe1; }
+        .admonition-caution { border-right: 4px solid #cf222e; background: #ffebe9; }
+        .admonition-important { border-right: 4px solid #8250df; background: #fbefff; }
+
+        /* Math environments (theorem, definition, proof, ...) */
+        .math-env {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1em 1.2em;
+            margin: 1.2em 0;
+        }
+        .math-env-title {
+            font-weight: 700;
+            margin-bottom: 0.4em;
+        }
+        .theorem { border-right: 4px solid #8250df; background: #fbefff; }
+        .definition { border-right: 4px solid #0969da; background: #ddf4ff; }
+        .proof { border-right: 4px solid #57606a; background: #f6f8fa; }
+        .lemma { border-right: 4px solid #bf8700; background: #fff8c5; }
+        .example { border-right: 4px solid #1a7f37; background: #dafbe1; }
+
+        /* Citation & CrossRef */
+        .citation { color: var(--accent); font-weight: 600; }
+        .crossref { color: #8250df; }
+
+        /* Details/Summary */
+        details {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.8em 1.2em;
+            margin: 1em 0;
+        }
+        summary {
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        /* Footnotes */
+        .footnote { font-size: 0.85em; }
+        .footnote-ref { vertical-align: super; font-size: 0.75em; }
+
+        /* Frontmatter panel */
+        .frontmatter-panel {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1em 1.2em;
+            margin-bottom: 2em;
+            font-size: 0.82em;
+            direction: ltr;
+            text-align: left;
+        }
+        .frontmatter-panel summary { color: #57606a; font-size: 0.95em; }
+        .frontmatter-panel pre { border: none; background: transparent; padding: 0.5em 0; margin: 0; }
+
+        .imports-panel {
+            background: #fff8c5;
+            border: 1px solid #d4a72c;
+            border-radius: 8px;
+            padding: 0.6em 1em;
+            margin-bottom: 1.5em;
+            font-size: 0.82em;
+            direction: ltr;
+        }
+        .imports-panel code { font-size: 0.85em; }
+    </style>
+</head>
+<body>
+    <details class="frontmatter-panel">
+        <summary>Frontmatter (YAML metadata)</summary>
+        <pre>title: &#x27;{}\$$0.5cm] {مبانی منطق ریاضی و اثبات‌های صوری} {Foundations of Mathematical
+  Logic and Formal Proofs} {}&#x27;
+slug: 0-5cm-foundations-of-mathematical-logic-and-formal-proofs
+date: &#x27;2026-02-20&#x27;
+lang: fa
+dir: rtl
+author:
+  name: &#x27;{علی محمدی (Ali Mohammadi)} {ali@example.com}&#x27;
+type: book
+tags: []
+categories: []
+description: &#x27;&#x27;
+keywords: []
+toc: true
+math: true
+mermaid: false
+codeHighlight: false
+sourceFormat: latex
+sourceFile: sample-book.tex
+assets:
+  images: []
+  files: []
+noindex: false
+converterVersion: 0.1.0
+qualityScore: 0.0
+convertedAt: &#x27;2026-02-20T04:01:19.813332+00:00&#x27;</pre>
+    </details>
+    <details class="imports-panel" open>
+        <summary>MDX Imports</summary>
+        <code>import Citation from &#x27;@/components/refs/Citation&#x27;;</code><br/>
+        <code>import CrossRef from &#x27;@/components/refs/CrossRef&#x27;;</code><br/>
+        <code>import Definition from &#x27;@/components/math/Definition&#x27;;</code><br/>
+        <code>import Figure from &#x27;@/components/media/Figure&#x27;;</code><br/>
+        <code>import Proof from &#x27;@/components/math/Proof&#x27;;</code><br/>
+        <code>import Theorem from &#x27;@/components/math/Theorem&#x27;;</code><br/>
+    </details>
+
+    <article class="content">
+<hr />
+<p>dir: "rtl"
+lang: "fa"</p>
+<hr />
+<h1 id="_1">مقدمه و مفاهیم پایه</h1>
+<h2 id="_2">هدف این سند</h2>
+<p>این سند[^1]
+به‌عنوان یک <strong>نمونه جامع تست</strong>طراحی شده و شامل تمامی
+اجزای یک کتاب حرفه‌ای ریاضی–منطقی است. ما در فصل‌های آینده
+قضایا، تعاریف، اثبات‌ها، نمودارها و جداول مختلفی
+خواهیم داشت. [^2]</p>
+<p>تمامی ارجاعات، پانوشت‌ها و کتاب‌نامه این سند
+  صرفاً جهت تست هستند.
+  برای مطالعه بیشتر به </p>
+<p><div class="jsx-component">[Citation component]</div></p>
+<p>و </p>
+<p><div class="jsx-component">[Citation component]</div></p>
+<p>مراجعه کنید.</p>
+<h2 id="_3">ساختار فصل‌ها</h2>
+<ol>
+<li>
+<p>مقدمه و مفاهیم پایه (همین فصل)</p>
+</li>
+<li>
+<p>منطق گزاره‌ای و جداول ارزش</p>
+</li>
+<li>
+<p>منطق محمولات و اثبات‌های صوری</p>
+</li>
+<li>
+<p>نمودارها، تصاویر و جداول</p>
+</li>
+<li>
+<p>راهنمای فنی <span dir="ltr">LaTeX</span>فارسی</p>
+</li>
+</ol>
+<p><div class="math-env definition"><div class="math-env-title">گزاره (Proposition)</div><p><strong>گزاره</strong>جمله‌ای خبری است که دقیقاً یکی از دو ارزش
+  «درست» (<span dir="ltr">True</span>) یا «نادرست» (<span dir="ltr">False</span>) را دارد.</p>
+<p><span dir="ltr">
+    A <em>proposition</em>is a declarative sentence that is either
+    <strong>true</strong>or <strong>false</strong>, but not both.
+  </span></p></div></p>
+<p><div class="math-env theorem"><div class="math-env-title">قانون دمورگان (De Morgan</div><p>برای هر دو گزاره <span class="math-inline" dir="ltr">$p$</span> و <span class="math-inline" dir="ltr">$q$</span>:</p>
+<p>PROTECTED_BLOCK_4_ENDBLOCK</p>
+<p>\begin{aligned}
+\neg(p \land q) &amp;\equiv (\neg p) \lor (\neg q)
+       \
+    \neg(p \lor q)  &amp;\equiv (\neg p) \land (\neg q)
+\end{aligned}</p>
+<p>PROTECTED_BLOCK_5_ENDBLOCK</p></div></p>
+<p><div class="math-env proof"><div class="math-env-title">Proof</div><p>اثبات <CrossRef target="eq-demorgan1" />را با جدول ارزش انجام می‌دهیم.
+  جدول کامل در <CrossRef target="tab-demorgan" />آمده است.
+  با بررسی تمامی حالات، ستون‌های مربوطه برابرند. <span class="math-inline" dir="ltr">$\blacksquare$</span></p></div></p>
+<p><strong>جدول ارزش قوانین دمورگان</strong></p>
+<p>جدول ارزش قوانین دمورگان</p>
+<p>2</p>
+<pre><code>\toprule
+\rowcolor{PrimaryBlue!20}
+<span class="math-inline" dir="ltr">$p$</span> &amp; <span class="math-inline" dir="ltr">$q$</span> &amp; <span class="math-inline" dir="ltr">$\neg(p\land q)$</span>
+    &amp; <span class="math-inline" dir="ltr">$(\neg p)\lor(\neg q)$</span> &amp; برابری \\
+\midrule
+T &amp; T &amp; F &amp; F &amp; \checkmark \\
+T &amp; F &amp; T &amp; T &amp; \checkmark \\
+F &amp; T &amp; T &amp; T &amp; \checkmark \\
+F &amp; F &amp; T &amp; T &amp; \checkmark \\
+\bottomrule
+</code></pre>
+<p><Example id="demorgan-use" title="کاربرد دمورگان"></p>
+<p>فرض کنید <span class="math-inline" dir="ltr">$p$</span>: «هوا بارانی است» و <span class="math-inline" dir="ltr">$q$</span>: «هوا سرد است».
+  آنگاه:</p>
+<pre><code>(p q) «هوا بارانی نیست \textbf{یا} سرد نیست»
+</code></pre>
+<p><div class="math-block" dir="ltr">$$</Example>
+
+
+# منطق گزاره‌ای و جداول ارزش
+
+
+## عملگرهای منطقی
+
+
+عملگرهای پایه منطق گزاره‌ای عبارتند از:
+
+
+<div style="">
+
+<TikZDiagram>
+},thick,PrimaryBlue}
+]
+  \node (neg) {$\neg$ — نقیض};
+  \node (and) [right=of neg] {$\land$ — عطف};
+  \node (or)  [right=of and] {$\lor$ — فصل};
+  \node (imp) [below=1.2cm of and] {$\to$ — شرطی};
+  \node (iff) [right=of imp] {$\leftrightarrow$ — دو شرطی};
+
+\draw[arr] (neg) -- (and);
+  \draw[arr] (and) -- (or);
+  \draw[arr] (and) -- (imp);
+  \draw[arr] (imp) -- (iff);
+</TikZDiagram>
+
+### جدول ارزش کامل
+
+
+**جدول ارزش تمامی عملگرهای دوتایی**
+
+جدول ارزش تمامی عملگرهای دوتایی
+  
+  2
+  
+
+\toprule
+    \rowcolor{AccentTeal!20}
+    $p$ & $q$ & $p\land q$ & $p\lor q$ & $p\to q$
+        & $p\leftrightarrow q$ & $p\oplus q$ \\
+    \midrule
+    T & T & T & T & T & T & F \\
+    T & F & F & T & F & F & T \\
+    F & T & F & T & T & F & T \\
+    F & F & F & F & T & T & F \\
+    \bottomrule
+## تاتولوژی و تناقض
+
+
+<Definition id="tautology" title="تاتولوژی (Tautology)">
+
+گزاره مرکب $\varphi$ یک **تاتولوژی**است اگر و تنها اگر
+  تحت *هر*تخصیص ارزش، مقدار آن درست ($\top$) باشد:$$</div></p>
+<p>\models \varphi
+    \quad\Longleftrightarrow\quad
+    \forall\, v: v(\varphi) = \top</p>
+<p><div class="math-block" dir="ltr">$$</Definition>
+
+
+<Theorem id="lem" title="تاتولوژی بودن $p \lor \neg p$">
+
+برای هر گزاره $p$:$$</div></p>
+<p><div class="math-block" dir="ltr">$$\models\; p \lor \neg p$$</div></p>
+<p><div class="math-block" dir="ltr">$$این قضیه به **اصل طرد شق ثالث**
+  (<span dir="ltr">Law of Excluded Middle</span>) معروف است.  اصل طرد شق ثالث در منطق شهودی
+    (\lr{Intuitionistic Logic}) پذیرفته نیست.
+    برای جزئیات بیشتر [^cite-godel1931] را ببینید.
+
+</Theorem>
+
+
+<Proof>
+
+دو حالت وجود دارد:
+  
+
+- اگر $p = \top$ آنگاه $p \lor \neg p = \top \lor \bot = \top$.
+    
+- اگر $p = \bot$ آنگاه $p \lor \neg p = \bot \lor \top = \top$.
+
+
+  پس در هر دو حالت مقدار درست است. $\blacksquare$
+
+</Proof>
+
+
+# منطق محمولات و اثبات‌های صوری
+
+
+## سورها و محمولات
+
+
+<Definition id="quantifiers" title="سور عمومی و وجودی">$$</div></p>
+<p><div class="math-block" dir="ltr">$$\begin{aligned}
+\forall x\, P(x) &\quad\text{«برای \textbf{هر} $x$، $P(x)$ برقرار است»}
+      \\
+    \exists x\, P(x) &\quad\text{«\textbf{وجود دارد} $x$ که $P(x)$ برقرار است»}
+\end{aligned}$$</div></p>
+<p><div class="math-block" dir="ltr">$$</Definition>
+
+
+### اثبات صوری به روش استنتاج طبیعی
+
+
+<Theorem id="quant-neg" title="رابطه سورها (نفی سور عمومی)">$$</div></p>
+<p><div class="math-block" dir="ltr">$$\neg \forall x\, P(x) \;\equiv\; \exists x\, \neg P(x)$$</div></p>
+<p><div class="math-block" dir="ltr">$$</Theorem>
+
+
+<Proof>
+
+**اثبات ← (جهت چپ به راست):**
+
+  فرض کنید $\neg\forall x\, P(x)$.
+  به‌طور برهان خلف فرض کنید
+  $\neg\exists x\,\neg P(x)$.
+  آنگاه برای هر $x$ داریم $\neg\neg P(x)$،
+  یعنی $P(x)$. پس $\forall x\, P(x)$ که تناقض است.
+
+  **اثبات → (جهت راست به چپ):**
+
+  فرض کنید $\exists x\,\neg P(x)$.
+  پس عنصری مانند $a$ وجود دارد که $\neg P(a)$.
+  اگر $\forall x\, P(x)$ برقرار بود آنگاه $P(a)$ که تناقض.
+  $\blacksquare$
+
+</Proof>
+
+
+## درخت اثبات
+
+
+زیر یک درخت اثبات (<span dir="ltr">Proof Tree</span>) به سبک
+**Gentzen**برای
+$\{p \to q,\; q \to r\} \vdash p \to r$
+رسم شده:
+
+
+<div style="">
+
+<TikZDiagram>
+}}
+]
+  \node {$p \to r$}
+    child {
+      node {$p \to q$}
+      child { node {فرض $1$} }
+    }
+    child {
+      node {$q \to r$}
+      child { node {فرض $2$} }
+    };
+
+</TikZDiagram>
+
+## الگوریتم بررسی تاتولوژی
+
+
+
+
+PROTECTED_BLOCK_0_ENDBLOCK
+
+
+
+# نمودارها، تصاویر و جداول
+
+
+## نمودار pgfplots
+
+
+### نمودار تابع
+
+
+<Figure caption="نمودار توابع مثلثاتی \lr{(Trigonometric Functions)" id="fig-trig" />
+
+
+### نمودار میله‌ای
+
+
+<Figure caption="مقایسه مقالات منتشرشده در دو سال" id="fig-bar" />
+
+
+### نمودار دایره‌ای
+
+
+<Figure caption="توزیع مقالات بر حسب نوع منطق" id="fig-pie" />
+
+
+## شکل‌های TikZ
+
+
+### نمودار ذهنی (\lr{Mind Map})
+
+
+<Figure caption="نقشه ذهنی شاخه‌های منطق ریاضی" id="fig-mindmap" />
+
+
+### فلوچارت (\lr{Flowchart})
+
+
+<Figure caption="فلوچارت الگوریتم بررسی تاتولوژی" id="fig-flowchart" />
+
+
+## تصویر خارجی و \lr{wrapfigure}
+
+
+<Figure float="left" width="35%" caption="تصویر جایگزین" />
+
+
+این متن در کنار تصویر قرار گرفته تا نحوه عملکرد
+<span dir="ltr">wrapfigure</span>را نشان دهد. در تبدیل به <span dir="ltr">MDX</span>
+این نوع چیدمان باید حفظ یا به شکل مناسبی
+بازنمایی شود. تصاویر کنار متن در مقالات علمی
+بسیار رایج‌اند و تبدیل‌گر باید آن‌ها را به‌درستی
+به یک <span dir="ltr">component</span>مناسب تبدیل کند.
+لورم ایپسوم متن ساختگی با تولید سادگی نامفهوم
+از صنعت چاپ، و با استفاده از طراحان گرافیک است.
+
+
+## جدول افقی (\lr{Landscape Table})
+
+
+<div className="landscape-table">
+
+جدول افقی — مقایسه سیستم‌های اثبات
+  
+  2
+  
+
+
+    \toprule
+    \rowcolor{PrimaryBlue!20}
+    سیستم & نوع & تمامیت & سازگاری & پیچیدگی & ملاحظات \\
+    \midrule
+    هیلبرت
+      & اصل‌موضوعی & بله & بله & بالا
+      & تعداد بدیهی زیاد \\
+    استنتاج طبیعی
+      & قاعده‌محور & بله & بله & متوسط
+      & شهودی‌تر \\
+    حساب ردیف‌ها (\lr{Sequent})
+      & ساختاری & بله & بله & متوسط
+      & قاعده برش \\
+    تابلو
+      & درختی & بله & بله & پایین
+      & جستجوی خودکار \\
+    رزولوشن
+      & مکانیزه & بله (برای CNF) & بله & بالا
+      & پایه \lr{SAT Solvers} \\
+    \bottomrule
+
+## زیرشکل‌ها (\lr{Subfigures})
+
+
+<Figure caption="تابع میرا" id="fig-sub1" />
+
+
+## کد برنامه
+
+
+<span dir="ltr">
+
+
+
+
+PROTECTED_BLOCK_1_ENDBLOCK
+
+
+</span>
+
+
+## فرمول‌های پیچیده ریاضی
+
+
+### ماتریس‌ها و بردارها$$</div></p>
+<p><div class="math-block" dir="ltr">$$A = \begin{pmatrix}
+    a_{11} & a_{12} & \cdots & a_{1n} \\
+    a_{21} & a_{22} & \cdots & a_{2n} \\
+    \vdots & \vdots & \ddots & \vdots \\
+    a_{m1} & a_{m2} & \cdots & a_{mn}
+  \end{pmatrix}
+  ,\qquad
+  \vec{x} = \begin{pmatrix} x_1 \\ x_2 \\ \vdots \\ x_n \end{pmatrix}$$</div></p>
+<p><div class="math-block" dir="ltr">$$### مجموع و انتگرال$$</div></p>
+<p><div class="math-block" dir="ltr">$$\sum_{k=0}^{\infty} \frac{x^k}{k!} = e^x
+  ,\qquad
+  \int_{-\infty}^{+\infty} e^{-x^2}\,dx = \sqrt{\pi}$$</div></p>
+<p><div class="math-block" dir="ltr">$$### فرمول‌های چندخطی$$</div></p>
+<p><div class="math-block" dir="ltr">$$\begin{aligned}
+\mathcal{L}\{f(t)\} &= \int_{0}^{\infty} e^{-st} f(t)\,dt
+     \\
+  \hat{f}(\xi) &= \int_{-\infty}^{+\infty}
+    f(x)\,e^{-2\pi i x\xi}\,dx
+     \\
+  \nabla \times \mathbf{E} &= -\frac{\partial \mathbf{B}}{\partial t}
+\end{aligned}$$</div></p>
+<p><div class="math-block" dir="ltr">$$### حالت‌ها (\lr{cases})$$</div></p>
+<p><div class="math-block" dir="ltr">$$|x| =
+  \begin{cases}
+    x  & \text{اگر } x \geq 0 \\
+    -x & \text{اگر } x < 0
+  \end{cases}$$</div></p>
+<p>$$</p>
+<h2 id="_4">لینک‌ها و ارجاعات متقاطع</h2>
+<ul>
+<li>
+<p>ارجاع به قضیه: <a class="crossref" href="#">thm-demorgan</a></p>
+</li>
+<li>
+<p>ارجاع به تعریف: <a class="crossref" href="#">def-prop</a></p>
+</li>
+<li>
+<p>ارجاع به معادله: <a class="crossref" href="#">eq-laplace</a></p>
+</li>
+<li>
+<p>ارجاع به شکل: <a class="crossref" href="#">fig-mindmap</a></p>
+</li>
+<li>
+<p>ارجاع به جدول: <a class="crossref" href="#">tab-all-ops</a></p>
+</li>
+<li>
+<p>ارجاع به الگوریتم: <a class="crossref" href="#">algo-tautology</a></p>
+</li>
+<li>
+<p>ارجاع به کد: <a class="crossref" href="#">lst-python</a></p>
+</li>
+<li>
+<p>لینک خارجی: <a href="https://en.wikipedia.org/wiki/Mathematical_logic">ویکی‌پدیا — منطق ریاضی</a></p>
+</li>
+<li>
+<p>منبع وب: </p>
+</li>
+</ul>
+<p><div class="jsx-component">[Citation component]</div></p>
+<h1 id="lrlatex">راهنمای فنی \lr{\LaTeX} فارسی</h1>
+<p>این فصل یک <strong>مرجع فنی</strong>کامل برای نگارش
+  اسناد <span dir="ltr">\LaTeX</span>فارسی است و خود بخشی از محتوای
+  تست تبدیل فرمت محسوب می‌شود.</p>
+<h2 id="_5">پیش‌نیازها و نصب</h2>
+<ol>
+<li>
+<p><strong>توزیع تک‌لایو:</strong>
+    نسخه کامل <span dir="ltr">TeX Live 2024</span>(یا جدیدتر) را نصب کنید.
+    روی ویندوز <span dir="ltr">MiKTeX</span>نیز قابل استفاده است ولی
+    <span dir="ltr">TeX Live</span>پیشنهاد می‌شود.</p>
+</li>
+<li>
+<p><strong>کامپایلر:</strong>
+    حتماً از <span dir="ltr"><code>xelatex</code></span>استفاده کنید.
+    <span dir="ltr">pdflatex</span>از فونت‌های فارسی پشتیبانی نمی‌کند.</p>
+</li>
+<li>
+<p><strong>فونت‌ها:</strong>
+    فونت‌های زیر را نصب کنید:</p>
+</li>
+<li>
+<p><span dir="ltr">IRLotus</span>(یا <span dir="ltr">XB Niloofar</span>، <span dir="ltr">Vazirmatn</span>)</p>
+</li>
+<li>
+<p><span dir="ltr">IranNastaliq</span>(اختیاری — برای نستعلیق)</p>
+</li>
+<li>
+<p>یک فونت لاتین مناسب مثل <span dir="ltr">TeX Gyre Termes</span></p>
+</li>
+<li>
+<p><strong>ویرایشگر:</strong>
+    <span dir="ltr">TeXstudio</span>، <span dir="ltr">VS Code + LaTeX Workshop</span>
+    یا <span dir="ltr">Overleaf</span>پیشنهاد می‌شوند.</p>
+</li>
+</ol>
+<h2 id="_6">ترتیب بارگذاری پکیج‌ها</h2>
+<p><code>xepersian</code><strong>باید آخرین</strong>پکیج بارگذاری‌شده باشد.
+  تنها استثنا پکیج‌هایی هستند که صراحتاً اعلام کرده‌اند
+  باید بعد از <span dir="ltr">xepersian</span>بیایند (بسیار نادر).</p>
+<p>ترتیب پیشنهادی:</p>
+<p><span dir="ltr"></p>
+<p><pre><code>TeX},
+  caption={ترتیب بارگذاری پکیج‌ها},
+  label={lst:pkg-order}]
+% 1) Page geometry
+\usepackage{geometry}
+
+% 2) Font engine
+\usepackage{fontspec}
+% 3) Colors (before tikz/tcolorbox)
+\usepackage[dvipsnames,svgnames]{xcolor}
+% 4) Math
+\usepackage{amsmath,amsthm,amssymb,mathtools}
+\usepackage{unicode-math}    % optional
+% 5) Tables
+\usepackage{booktabs,tabularx,longtable,multirow}
+% 6) Graphics
+\usepackage{graphicx,float,wrapfig}
+\usepackage{caption,subcaption}
+% 7) TikZ &amp; pgfplots
+\usepackage{tikz}
+\usepackage{pgfplots}
+% 8) Code listings
+\usepackage{listings}
+% 9) Algorithms
+\usepackage[ruled]{algorithm2e}
+% 10) Lists
+\usepackage{enumitem}
+% 11) Hyperref (BEFORE xepersian)
+\usepackage[colorlinks]{hyperref}
+\usepackage{cleveref}
+% 12) Bibliography
+\usepackage[backend=biber]{biblatex}
+% 13) Headers
+\usepackage{fancyhdr}
+% === LAST === Persian support
+\usepackage[extrafootnotefeatures]{xepersian}</code></pre></p>
+<p></span></p>
+<h2 id="_7">تعارضات رایج و راه‌حل</h2>
+<p>\caption{تعارضات رایج پکیج‌ها با \lr{xepersian}}
+  \label{tab:conflicts} \
+  \toprule
+  \rowcolor{PrimaryBlue!15}
+  پکیج مشکل‌ساز &amp; مشکل &amp; راه‌حل \
+  \midrule
+  \endfirsthead
+  \toprule
+  \rowcolor{PrimaryBlue!15}
+  پکیج &amp; مشکل &amp; راه‌حل \
+  \midrule
+  \endhead
+  \midrule
+  \multicolumn{3}{r}{\small ادامه در صفحه بعد\ldots}\
+  \endfoot
+  \bottomrule
+  \endlastfoot</p>
+<p>\lr{babel}
+    &amp; تداخل مستقیم با \lr{xepersian}
+    &amp; هرگز با هم استفاده نکنید \</p>
+<p>\lr{inputenc}
+    &amp; غیرلازم در \lr{XeLaTeX}
+    &amp; حذف کنید \</p>
+<p>\lr{fontenc}
+    &amp; تداخل با \lr{fontspec}
+    &amp; حذف کنید \</p>
+<p>\lr{polyglossia}
+    &amp; ممکن اما پیچیده
+    &amp; ترجیحاً فقط \lr{xepersian} \</p>
+<p>\lr{hyperref}
+    &amp; باید قبل از \lr{xepersian} بیاید
+    &amp; ترتیب را رعایت کنید \</p>
+<p>\lr{cleveref}
+    &amp; نیاز به تعریف \lr{crefname} فارسی
+    &amp; \lr{\textbackslash crefname} را بازتعریف کنید \</p>
+<p>\lr{algorithm2e}
+    &amp; برخی کلمات کلیدی فارسی نمی‌شوند
+    &amp; از \lr{\textbackslash SetKw} استفاده کنید \</p>
+<p>\lr{listings}
+    &amp; مشکل با کاراکترهای یونیکد در کد
+    &amp; \lr{literate} تنظیم کنید یا
+      \lr{minted} جایگزین \</p>
+<h2 id="lrxepersian">دستورات کلیدی \lr{xepersian}</h2>
+<p><strong>دستورات پرکاربرد \lr{xepersian</strong></p>
+<p>دستورات پرکاربرد \lr{xepersian}</p>
+<p>2</p>
+<pre><code>\toprule
+\rowcolor{AccentTeal!20}
+دستور &amp; توضیح \\
+\midrule
+\lr{\textbackslash settextfont}
+  &amp; فونت اصلی متن فارسی \\
+\lr{\textbackslash setlatintextfont}
+  &amp; فونت متن لاتین \\
+\lr{\textbackslash setdigitfont}
+  &amp; فونت ارقام فارسی \\
+\lr{\textbackslash defpersianfont}
+  &amp; تعریف فونت سفارشی فارسی \\
+\lr{\textbackslash lr\{\ldots\}}
+  &amp; متن چپ‌به‌راست (لاتین) درون فارسی \\
+\lr{\textbackslash rl\{\ldots\}}
+  &amp; متن راست‌به‌چپ (فارسی) درون لاتین \\
+\lr{\textbackslash LTRfootnote}
+  &amp; پانوشت انگلیسی \\
+\lr{\textbackslash RTLfootnote}
+  &amp; پانوشت فارسی (پیش‌فرض) \\
+\lr{\textbackslash begin\{latin\}}
+  &amp; بلوک کامل لاتین \\
+\lr{\textbackslash begin\{persian\}}
+  &amp; بازگشت به بلوک فارسی \\
+\lr{\textbackslash twocolumnfootnotes}
+  &amp; پانوشت دوستونی \\
+\bottomrule
+</code></pre>
+<h2 id="_8">نکات تایپوگرافی فارسی</h2>
+<ol>
+<li>
+<p><strong>نیم‌فاصله:</strong>
+    در ترکیبات فارسی مثل «می‌روم» و «کتاب‌ها» از
+    <em>نیم‌فاصله</em>(<span dir="ltr">ZWNJ, U+200C</span>) استفاده کنید،
+    نه فاصله معمولی.</p>
+</li>
+<li>
+<p><strong>گیومه:</strong>
+    در فارسی از «» (گیومه فرانسوی) استفاده کنید
+    نه <span dir="ltr">"..."</span>.</p>
+</li>
+<li>
+<p><strong>اعداد:</strong>
+    با <span dir="ltr">\textbackslash setdigitfont</span>ارقام فارسی
+    (۰۱۲۳۴۵۶۷۸۹) فعال می‌شوند. در محیط
+    <span dir="ltr">latin</span>ارقام لاتین نمایش داده می‌شوند.</p>
+</li>
+<li>
+<p><strong>ریاضی:</strong>
+    محیط‌های ریاضی (<span dir="ltr">\<span class="math-inline" dir="ltr">$. . . \$</span></span>, <span dir="ltr">equation</span>,
+    <span dir="ltr">align</span>) همیشه چپ‌به‌راست هستند و نیاز
+    به تنظیم خاصی ندارند.</p>
+</li>
+<li>
+<p>**مراجع فارسی: **
+    در <span dir="ltr">biblatex</span>برای مراجع فارسی از
+    <span dir="ltr">language=persian</span>استفاده کنید.</p>
+</li>
+</ol>
+<h2 id="_9">فرمان کامپایل</h2>
+<p><span dir="ltr"></p>
+<p><pre><code class="language-bash"># Compile
+xelatex -interaction=nonstopmode document.tex
+biber document
+xelatex -interaction=nonstopmode document.tex
+xelatex -interaction=nonstopmode document.tex
+
+# Or with latexmk (recommended)
+latexmk -xelatex -interaction=nonstopmode document.tex</code></pre></p>
+<p></span></p>
+<p><div class="jsx-component">[Bibliography component]</div></p>
+    </article>
+</body>
+</html>

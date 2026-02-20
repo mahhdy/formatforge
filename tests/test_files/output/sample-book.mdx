@@ -1,0 +1,932 @@
+---
+title: '{}\$$0.5cm] {مبانی منطق ریاضی و اثبات‌های صوری} {Foundations of Mathematical
+  Logic and Formal Proofs} {}'
+slug: 0-5cm-foundations-of-mathematical-logic-and-formal-proofs
+date: '2026-02-20'
+lang: fa
+dir: rtl
+author:
+  name: '{علی محمدی (Ali Mohammadi)} {ali@example.com}'
+type: book
+tags: []
+categories: []
+description: ''
+keywords: []
+toc: true
+math: true
+mermaid: false
+codeHighlight: false
+sourceFormat: latex
+sourceFile: sample-book.tex
+assets:
+  images: []
+  files: []
+noindex: false
+converterVersion: 0.1.0
+qualityScore: 0.0
+convertedAt: '2026-02-20T04:01:19.813332+00:00'
+---
+
+import Citation from '@/components/refs/Citation';
+import CrossRef from '@/components/refs/CrossRef';
+import Definition from '@/components/math/Definition';
+import Figure from '@/components/media/Figure';
+import Proof from '@/components/math/Proof';
+import Theorem from '@/components/math/Theorem';
+
+---
+dir: "rtl"
+lang: "fa"
+---
+
+
+# مقدمه و مفاهیم پایه
+
+
+## هدف این سند
+
+
+این سند[^1]
+به‌عنوان یک **نمونه جامع تست**طراحی شده و شامل تمامی
+اجزای یک کتاب حرفه‌ای ریاضی–منطقی است. ما در فصل‌های آینده
+قضایا، تعاریف، اثبات‌ها، نمودارها و جداول مختلفی
+خواهیم داشت. [^2]
+
+
+<Note>
+
+تمامی ارجاعات، پانوشت‌ها و کتاب‌نامه این سند
+  صرفاً جهت تست هستند.
+  برای مطالعه بیشتر به <Citation keys="knuth1997" />و <Citation keys="ebrahimi1399" />
+  مراجعه کنید.
+
+</Note>
+
+
+## ساختار فصل‌ها
+
+
+1. مقدمه و مفاهیم پایه (همین فصل)
+  
+2. منطق گزاره‌ای و جداول ارزش
+  
+3. منطق محمولات و اثبات‌های صوری
+  
+4. نمودارها، تصاویر و جداول
+  
+5. راهنمای فنی <span dir="ltr">LaTeX</span>فارسی
+
+
+<Definition id="prop" title="گزاره (Proposition)">
+
+**گزاره**جمله‌ای خبری است که دقیقاً یکی از دو ارزش
+  «درست» (<span dir="ltr">True</span>) یا «نادرست» (<span dir="ltr">False</span>) را دارد.
+
+  <span dir="ltr">
+    A *proposition*is a declarative sentence that is either
+    **true**or **false**, but not both.
+  </span>
+
+</Definition>
+
+
+<Theorem id="demorgan" title="قانون دمورگان (De Morgan's Laws)">
+
+برای هر دو گزاره $p$ و $q$:
+  
+
+<div dir="ltr">
+
+$$
+$$
+
+</div>
+{/* label: eq-demorgan1 */}
+
+\begin{aligned}
+\neg(p \land q) &\equiv (\neg p) \lor (\neg q)
+       \\
+    \neg(p \lor q)  &\equiv (\neg p) \land (\neg q)
+\end{aligned}
+<div dir="ltr">
+
+$$
+$$
+
+</div>
+
+</Theorem>
+
+
+<Proof>
+
+اثبات <CrossRef target="eq-demorgan1" />را با جدول ارزش انجام می‌دهیم.
+  جدول کامل در <CrossRef target="tab-demorgan" />آمده است.
+  با بررسی تمامی حالات، ستون‌های مربوطه برابرند. $\blacksquare$
+
+</Proof>
+
+
+**جدول ارزش قوانین دمورگان**
+
+جدول ارزش قوانین دمورگان
+  
+  2
+  
+
+
+    \toprule
+    \rowcolor{PrimaryBlue!20}
+    $p$ & $q$ & $\neg(p\land q)$
+        & $(\neg p)\lor(\neg q)$ & برابری \\
+    \midrule
+    T & T & F & F & \checkmark \\
+    T & F & T & T & \checkmark \\
+    F & T & T & T & \checkmark \\
+    F & F & T & T & \checkmark \\
+    \bottomrule
+
+
+<Example id="demorgan-use" title="کاربرد دمورگان">
+
+فرض کنید $p$: «هوا بارانی است» و $q$: «هوا سرد است».
+  آنگاه:
+  
+    (p q) «هوا بارانی نیست \textbf{یا} سرد نیست»
+  <div dir="ltr">
+
+$$
+
+</Example>
+
+
+# منطق گزاره‌ای و جداول ارزش
+
+
+## عملگرهای منطقی
+
+
+عملگرهای پایه منطق گزاره‌ای عبارتند از:
+
+
+<div style={{textAlign: "center"}}>
+
+<TikZDiagram>
+},thick,PrimaryBlue}
+]
+  \node (neg) {$\neg$ — نقیض};
+  \node (and) [right=of neg] {$\land$ — عطف};
+  \node (or)  [right=of and] {$\lor$ — فصل};
+  \node (imp) [below=1.2cm of and] {$\to$ — شرطی};
+  \node (iff) [right=of imp] {$\leftrightarrow$ — دو شرطی};
+
+<div dir="ltr" lang="en">\draw[arr] (neg) -- (and);
+  \draw[arr] (and) -- (or);
+  \draw[arr] (and) -- (imp);
+  \draw[arr] (imp) -- (iff);</div>
+
+</TikZDiagram>
+
+</div>
+
+
+### جدول ارزش کامل
+
+
+**جدول ارزش تمامی عملگرهای دوتایی**
+
+جدول ارزش تمامی عملگرهای دوتایی
+  
+  2
+  
+
+<div dir="ltr" lang="en">\toprule
+    \rowcolor{AccentTeal!20}
+    $p$ & $q$ & $p\land q$ & $p\lor q$ & $p\to q$
+        & $p\leftrightarrow q$ & $p\oplus q$ \\
+    \midrule
+    T & T & T & T & T & T & F \\
+    T & F & F & T & F & F & T \\
+    F & T & F & T & T & F & T \\
+    F & F & F & F & T & T & F \\
+    \bottomrule</div>
+
+
+## تاتولوژی و تناقض
+
+
+<Definition id="tautology" title="تاتولوژی (Tautology)">
+
+گزاره مرکب $\varphi$ یک **تاتولوژی**است اگر و تنها اگر
+  تحت *هر*تخصیص ارزش، مقدار آن درست ($\top$) باشد:
+  
+
+$$
+
+</div>
+\models \varphi
+    \quad\Longleftrightarrow\quad
+    \forall\, v: v(\varphi) = \top
+<div dir="ltr">
+
+$$
+
+</Definition>
+
+
+<Theorem id="lem" title="تاتولوژی بودن $p \lor \neg p$">
+
+برای هر گزاره $p$:
+  
+
+$$
+
+</div>
+<div dir="ltr">
+
+$$
+{/* label: eq-lem */}
+
+<div dir="ltr" lang="en">\models\; p \lor \neg p
+$$</div>
+
+</div>
+<div dir="ltr">
+
+$$
+
+
+  این قضیه به **اصل طرد شق ثالث**
+  (<span dir="ltr">Law of Excluded Middle</span>) معروف است.  اصل طرد شق ثالث در منطق شهودی
+    (\lr{Intuitionistic Logic}) پذیرفته نیست.
+    برای جزئیات بیشتر [^cite-godel1931] را ببینید.
+
+</Theorem>
+
+
+<Proof>
+
+دو حالت وجود دارد:
+  
+
+- اگر $p = \top$ آنگاه $p \lor \neg p = \top \lor \bot = \top$.
+    
+- اگر $p = \bot$ آنگاه $p \lor \neg p = \bot \lor \top = \top$.
+
+
+  پس در هر دو حالت مقدار درست است. $\blacksquare$
+
+</Proof>
+
+
+# منطق محمولات و اثبات‌های صوری
+
+
+## سورها و محمولات
+
+
+<Definition id="quantifiers" title="سور عمومی و وجودی">
+
+$$
+
+</div>
+<div dir="ltr">
+
+$$
+{/* label: eq-forall */}
+
+\begin{aligned}
+\forall x\, P(x) &\quad\text{«برای \textbf{هر} $x$، $P(x)$ برقرار است»}
+      \\
+    \exists x\, P(x) &\quad\text{«\textbf{وجود دارد} $x$ که $P(x)$ برقرار است»}
+\end{aligned}
+$$
+
+</div>
+<div dir="ltr">
+
+$$
+
+</Definition>
+
+
+### اثبات صوری به روش استنتاج طبیعی
+
+
+<Theorem id="quant-neg" title="رابطه سورها (نفی سور عمومی)">
+
+$$
+
+</div>
+<div dir="ltr">
+
+$$
+{/* label: eq-quant-neg */}
+
+<div dir="ltr" lang="en">\neg \forall x\, P(x) \;\equiv\; \exists x\, \neg P(x)
+$$</div>
+
+</div>
+<div dir="ltr">
+
+$$
+
+</Theorem>
+
+
+<Proof>
+
+**اثبات ← (جهت چپ به راست):**
+
+  فرض کنید $\neg\forall x\, P(x)$.
+  به‌طور برهان خلف فرض کنید
+  $\neg\exists x\,\neg P(x)$.
+  آنگاه برای هر $x$ داریم $\neg\neg P(x)$،
+  یعنی $P(x)$. پس $\forall x\, P(x)$ که تناقض است.
+
+  **اثبات → (جهت راست به چپ):**
+
+  فرض کنید $\exists x\,\neg P(x)$.
+  پس عنصری مانند $a$ وجود دارد که $\neg P(a)$.
+  اگر $\forall x\, P(x)$ برقرار بود آنگاه $P(a)$ که تناقض.
+  $\blacksquare$
+
+</Proof>
+
+
+## درخت اثبات
+
+
+زیر یک درخت اثبات (<span dir="ltr">Proof Tree</span>) به سبک
+**Gentzen**برای
+$\{p \to q,\; q \to r\} \vdash p \to r$
+رسم شده:
+
+
+<div style={{textAlign: "center"}}>
+
+<TikZDiagram>
+}}
+]
+  \node {$p \to r$}
+    child {
+      node {$p \to q$}
+      child { node {فرض $1$} }
+    }
+    child {
+      node {$q \to r$}
+      child { node {فرض $2$} }
+    };
+
+</TikZDiagram>
+
+</div>
+
+
+## الگوریتم بررسی تاتولوژی
+
+
+<div dir="ltr">
+
+```
+\SetAlgoLined
+  \KwIn{فرمول گزاره‌ای $\varphi$ با $n$ متغیر}
+  \KwOut{آیا $\varphi$ تاتولوژی است؟}
+
+  \For{$i \leftarrow 0$ \KwTo $2^n - 1$}{
+    $v \leftarrow$ تخصیص ارزش متناظر با $i$\;
+    \If{$\mathrm{Eval}(\varphi, v) = \bot$}{
+      \Return{\textsf{خیر}}\;
+    }
+  }
+  \Return{\textsf{بله}}\;
+  \caption{بررسی تاتولوژی با شمارش کامل}
+  \label{algo:tautology}
+```
+
+</div>
+
+
+# نمودارها، تصاویر و جداول
+
+
+## نمودار pgfplots
+
+
+### نمودار تابع
+
+
+<Figure caption="نمودار توابع مثلثاتی \lr{(Trigonometric Functions)" id="fig-trig" />
+
+
+### نمودار میله‌ای
+
+
+<Figure caption="مقایسه مقالات منتشرشده در دو سال" id="fig-bar" />
+
+
+### نمودار دایره‌ای
+
+
+<Figure caption="توزیع مقالات بر حسب نوع منطق" id="fig-pie" />
+
+
+## شکل‌های TikZ
+
+
+### نمودار ذهنی (\lr{Mind Map})
+
+
+<Figure caption="نقشه ذهنی شاخه‌های منطق ریاضی" id="fig-mindmap" />
+
+
+### فلوچارت (\lr{Flowchart})
+
+
+<Figure caption="فلوچارت الگوریتم بررسی تاتولوژی" id="fig-flowchart" />
+
+
+## تصویر خارجی و \lr{wrapfigure}
+
+
+<Figure float="left" width="35%" caption="تصویر جایگزین" />
+
+
+این متن در کنار تصویر قرار گرفته تا نحوه عملکرد
+<span dir="ltr">wrapfigure</span>را نشان دهد. در تبدیل به <span dir="ltr">MDX</span>
+این نوع چیدمان باید حفظ یا به شکل مناسبی
+بازنمایی شود. تصاویر کنار متن در مقالات علمی
+بسیار رایج‌اند و تبدیل‌گر باید آن‌ها را به‌درستی
+به یک <span dir="ltr">component</span>مناسب تبدیل کند.
+لورم ایپسوم متن ساختگی با تولید سادگی نامفهوم
+از صنعت چاپ، و با استفاده از طراحان گرافیک است.
+
+
+## جدول افقی (\lr{Landscape Table})
+
+
+<div className="landscape-table">
+
+جدول افقی — مقایسه سیستم‌های اثبات
+  
+  2
+  
+
+
+    \toprule
+    \rowcolor{PrimaryBlue!20}
+    سیستم & نوع & تمامیت & سازگاری & پیچیدگی & ملاحظات \\
+    \midrule
+    هیلبرت
+      & اصل‌موضوعی & بله & بله & بالا
+      & تعداد بدیهی زیاد \\
+    استنتاج طبیعی
+      & قاعده‌محور & بله & بله & متوسط
+      & شهودی‌تر \\
+    حساب ردیف‌ها (\lr{Sequent})
+      & ساختاری & بله & بله & متوسط
+      & قاعده برش \\
+    تابلو
+      & درختی & بله & بله & پایین
+      & جستجوی خودکار \\
+    رزولوشن
+      & مکانیزه & بله (برای CNF) & بله & بالا
+      & پایه \lr{SAT Solvers} \\
+    \bottomrule
+
+</div>
+
+
+## زیرشکل‌ها (\lr{Subfigures})
+
+
+<Figure caption="تابع میرا" id="fig-sub1" />
+
+
+## کد برنامه
+
+
+<span dir="ltr">
+
+
+<div dir="ltr">
+
+```python
+from itertools import product
+
+<div dir="ltr" lang="en">def is_tautology(formula, variables):
+    """Check if a propositional formula is a tautology."""
+    for values in product([True, False], repeat=len(variables)):
+        env = dict(zip(variables, values))
+        if not formula(env):
+            return False
+    return True</div>
+
+<div dir="ltr" lang="en"># Example: p or (not p)
+result = is_tautology(
+    lambda e: e['p'] or (not e['p']),
+    ['p']
+)
+print(f"p ∨ ¬p is tautology: {result}")  # True
+```</div>
+
+</div>
+
+
+</span>
+
+
+## فرمول‌های پیچیده ریاضی
+
+
+### ماتریس‌ها و بردارها
+
+
+$$
+
+</div>
+<div dir="ltr">
+
+$$
+{/* label: eq-matrix */}
+
+<div dir="ltr" lang="en">A = \begin{pmatrix}
+    a_{11} & a_{12} & \cdots & a_{1n} \\
+    a_{21} & a_{22} & \cdots & a_{2n} \\
+    \vdots & \vdots & \ddots & \vdots \\
+    a_{m1} & a_{m2} & \cdots & a_{mn}
+  \end{pmatrix}
+  ,\qquad
+  \vec{x} = \begin{pmatrix} x_1 \\ x_2 \\ \vdots \\ x_n \end{pmatrix}
+$$</div>
+
+</div>
+<div dir="ltr">
+
+$$
+
+
+### مجموع و انتگرال
+
+
+$$
+
+</div>
+<div dir="ltr">
+
+$$
+{/* label: eq-series-integral */}
+
+<div dir="ltr" lang="en">\sum_{k=0}^{\infty} \frac{x^k}{k!} = e^x
+  ,\qquad
+  \int_{-\infty}^{+\infty} e^{-x^2}\,dx = \sqrt{\pi}
+$$</div>
+
+</div>
+<div dir="ltr">
+
+$$
+
+
+### فرمول‌های چندخطی
+
+
+$$
+
+</div>
+<div dir="ltr">
+
+$$
+{/* label: eq-laplace */}
+
+<div dir="ltr" lang="en">\begin{aligned}
+\mathcal{L}\{f(t)\} &= \int_{0}^{\infty} e^{-st} f(t)\,dt
+     \\
+  \hat{f}(\xi) &= \int_{-\infty}^{+\infty}
+    f(x)\,e^{-2\pi i x\xi}\,dx
+     \\
+  \nabla \times \mathbf{E} &= -\frac{\partial \mathbf{B}}{\partial t}
+\end{aligned}
+$$</div>
+
+</div>
+<div dir="ltr">
+
+$$
+
+
+### حالت‌ها (\lr{cases})
+
+
+$$
+
+</div>
+<div dir="ltr">
+
+$$
+{/* label: eq-cases */}
+
+<div dir="ltr" lang="en">|x| =
+  \begin{cases}
+    x  & \text{اگر } x \geq 0 \\
+    -x & \text{اگر } x < 0
+  \end{cases}
+$$</div>
+
+</div>
+$$
+
+
+## لینک‌ها و ارجاعات متقاطع
+
+
+- ارجاع به قضیه: <CrossRef target="thm-demorgan" />
+  
+- ارجاع به تعریف: <CrossRef target="def-prop" />
+  
+- ارجاع به معادله: <CrossRef target="eq-laplace" />
+  
+- ارجاع به شکل: <CrossRef target="fig-mindmap" />
+  
+- ارجاع به جدول: <CrossRef target="tab-all-ops" />
+  
+- ارجاع به الگوریتم: <CrossRef target="algo-tautology" />
+  
+- ارجاع به کد: <CrossRef target="lst-python" />
+  
+- لینک خارجی: [ویکی‌پدیا — منطق ریاضی](https://en.wikipedia.org/wiki/Mathematical_logic)
+  
+- منبع وب: <Citation keys="mdnweb2024" />
+
+
+# راهنمای فنی \lr{\LaTeX} فارسی
+
+
+<Warning title="⚠ توجه مهم">
+
+این فصل یک **مرجع فنی**کامل برای نگارش
+  اسناد <span dir="ltr">\LaTeX</span>فارسی است و خود بخشی از محتوای
+  تست تبدیل فرمت محسوب می‌شود.
+
+</Warning>
+
+
+## پیش‌نیازها و نصب
+
+
+1. **توزیع تک‌لایو:**
+    نسخه کامل <span dir="ltr">TeX Live 2024</span>(یا جدیدتر) را نصب کنید.
+    روی ویندوز <span dir="ltr">MiKTeX</span>نیز قابل استفاده است ولی
+    <span dir="ltr">TeX Live</span>پیشنهاد می‌شود.
+
+  
+2. **کامپایلر:**
+    حتماً از <span dir="ltr">`xelatex`</span>استفاده کنید.
+    <span dir="ltr">pdflatex</span>از فونت‌های فارسی پشتیبانی نمی‌کند.
+
+  
+3. **فونت‌ها:**
+    فونت‌های زیر را نصب کنید:
+    
+
+4. <span dir="ltr">IRLotus</span>(یا <span dir="ltr">XB Niloofar</span>، <span dir="ltr">Vazirmatn</span>)
+      
+5. <span dir="ltr">IranNastaliq</span>(اختیاری — برای نستعلیق)
+      
+6. یک فونت لاتین مناسب مثل <span dir="ltr">TeX Gyre Termes</span>
+
+
+  
+7. **ویرایشگر:**
+    <span dir="ltr">TeXstudio</span>، <span dir="ltr">VS Code + LaTeX Workshop</span>
+    یا <span dir="ltr">Overleaf</span>پیشنهاد می‌شوند.
+
+
+## ترتیب بارگذاری پکیج‌ها
+
+
+<Note title="قانون طلایی">
+
+`xepersian`**باید آخرین**پکیج بارگذاری‌شده باشد.
+  تنها استثنا پکیج‌هایی هستند که صراحتاً اعلام کرده‌اند
+  باید بعد از <span dir="ltr">xepersian</span>بیایند (بسیار نادر).
+
+</Note>
+
+
+ترتیب پیشنهادی:
+
+<span dir="ltr">
+
+
+<div dir="ltr">
+
+```
+TeX},
+  caption={ترتیب بارگذاری پکیج‌ها},
+  label={lst:pkg-order}]
+% 1) Page geometry
+\usepackage{geometry}
+
+<div dir="ltr" lang="en">% 2) Font engine
+\usepackage{fontspec}</div>
+
+<div dir="ltr" lang="en">% 3) Colors (before tikz/tcolorbox)
+\usepackage[dvipsnames,svgnames]{xcolor}</div>
+
+<div dir="ltr" lang="en">% 4) Math
+\usepackage{amsmath,amsthm,amssymb,mathtools}
+\usepackage{unicode-math}    % optional</div>
+
+<div dir="ltr" lang="en">% 5) Tables
+\usepackage{booktabs,tabularx,longtable,multirow}</div>
+
+<div dir="ltr" lang="en">% 6) Graphics
+\usepackage{graphicx,float,wrapfig}
+\usepackage{caption,subcaption}</div>
+
+<div dir="ltr" lang="en">% 7) TikZ & pgfplots
+\usepackage{tikz}
+\usepackage{pgfplots}</div>
+
+<div dir="ltr" lang="en">% 8) Code listings
+\usepackage{listings}</div>
+
+<div dir="ltr" lang="en">% 9) Algorithms
+\usepackage[ruled]{algorithm2e}</div>
+
+<div dir="ltr" lang="en">% 10) Lists
+\usepackage{enumitem}</div>
+
+<div dir="ltr" lang="en">% 11) Hyperref (BEFORE xepersian)
+\usepackage[colorlinks]{hyperref}
+\usepackage{cleveref}</div>
+
+<div dir="ltr" lang="en">% 12) Bibliography
+\usepackage[backend=biber]{biblatex}</div>
+
+<div dir="ltr" lang="en">% 13) Headers
+\usepackage{fancyhdr}</div>
+
+<div dir="ltr" lang="en">% === LAST === Persian support
+\usepackage[extrafootnotefeatures]{xepersian}
+```</div>
+
+</div>
+
+
+</span>
+
+
+## تعارضات رایج و راه‌حل
+
+
+  \caption{تعارضات رایج پکیج‌ها با \lr{xepersian}}
+  \label{tab:conflicts} \\
+  \toprule
+  \rowcolor{PrimaryBlue!15}
+  پکیج مشکل‌ساز & مشکل & راه‌حل \\
+  \midrule
+  \endfirsthead
+  \toprule
+  \rowcolor{PrimaryBlue!15}
+  پکیج & مشکل & راه‌حل \\
+  \midrule
+  \endhead
+  \midrule
+  \multicolumn{3}{r}{\small ادامه در صفحه بعد\ldots}\\
+  \endfoot
+  \bottomrule
+  \endlastfoot
+
+  \lr{babel}
+    & تداخل مستقیم با \lr{xepersian}
+    & هرگز با هم استفاده نکنید \\
+
+  \lr{inputenc}
+    & غیرلازم در \lr{XeLaTeX}
+    & حذف کنید \\
+
+  \lr{fontenc}
+    & تداخل با \lr{fontspec}
+    & حذف کنید \\
+
+  \lr{polyglossia}
+    & ممکن اما پیچیده
+    & ترجیحاً فقط \lr{xepersian} \\
+
+  \lr{hyperref}
+    & باید قبل از \lr{xepersian} بیاید
+    & ترتیب را رعایت کنید \\
+
+  \lr{cleveref}
+    & نیاز به تعریف \lr{crefname} فارسی
+    & \lr{\textbackslash crefname} را بازتعریف کنید \\
+
+  \lr{algorithm2e}
+    & برخی کلمات کلیدی فارسی نمی‌شوند
+    & از \lr{\textbackslash SetKw} استفاده کنید \\
+
+  \lr{listings}
+    & مشکل با کاراکترهای یونیکد در کد
+    & \lr{literate} تنظیم کنید یا
+      \lr{minted} جایگزین \\
+
+
+## دستورات کلیدی \lr{xepersian}
+
+
+**دستورات پرکاربرد \lr{xepersian**
+
+دستورات پرکاربرد \lr{xepersian}
+  
+  2
+  
+
+
+    \toprule
+    \rowcolor{AccentTeal!20}
+    دستور & توضیح \\
+    \midrule
+    \lr{\textbackslash settextfont}
+      & فونت اصلی متن فارسی \\
+    \lr{\textbackslash setlatintextfont}
+      & فونت متن لاتین \\
+    \lr{\textbackslash setdigitfont}
+      & فونت ارقام فارسی \\
+    \lr{\textbackslash defpersianfont}
+      & تعریف فونت سفارشی فارسی \\
+    \lr{\textbackslash lr\{\ldots\}}
+      & متن چپ‌به‌راست (لاتین) درون فارسی \\
+    \lr{\textbackslash rl\{\ldots\}}
+      & متن راست‌به‌چپ (فارسی) درون لاتین \\
+    \lr{\textbackslash LTRfootnote}
+      & پانوشت انگلیسی \\
+    \lr{\textbackslash RTLfootnote}
+      & پانوشت فارسی (پیش‌فرض) \\
+    \lr{\textbackslash begin\{latin\}}
+      & بلوک کامل لاتین \\
+    \lr{\textbackslash begin\{persian\}}
+      & بازگشت به بلوک فارسی \\
+    \lr{\textbackslash twocolumnfootnotes}
+      & پانوشت دوستونی \\
+    \bottomrule
+
+
+## نکات تایپوگرافی فارسی
+
+
+1. **نیم‌فاصله:**
+    در ترکیبات فارسی مثل «می‌روم» و «کتاب‌ها» از
+    *نیم‌فاصله*(<span dir="ltr">ZWNJ, U+200C</span>) استفاده کنید،
+    نه فاصله معمولی.
+
+  
+2. **گیومه:**
+    در فارسی از «» (گیومه فرانسوی) استفاده کنید
+    نه <span dir="ltr">"..."</span>.
+
+  
+3. **اعداد:**
+    با <span dir="ltr">\textbackslash setdigitfont</span>ارقام فارسی
+    (۰۱۲۳۴۵۶۷۸۹) فعال می‌شوند. در محیط
+    <span dir="ltr">latin</span>ارقام لاتین نمایش داده می‌شوند.
+
+  
+4. **ریاضی:**
+    محیط‌های ریاضی (<span dir="ltr">\$. . . \$</span>, <span dir="ltr">equation</span>,
+    <span dir="ltr">align</span>) همیشه چپ‌به‌راست هستند و نیاز
+    به تنظیم خاصی ندارند.
+
+  
+5. **مراجع فارسی: **
+    در <span dir="ltr">biblatex</span>برای مراجع فارسی از
+    <span dir="ltr">language=persian</span>استفاده کنید.
+
+
+## فرمان کامپایل
+
+
+<span dir="ltr">
+
+
+<div dir="ltr">
+
+```bash
+# Compile
+xelatex -interaction=nonstopmode document.tex
+biber document
+xelatex -interaction=nonstopmode document.tex
+xelatex -interaction=nonstopmode document.tex
+
+<div dir="ltr" lang="en"># Or with latexmk (recommended)
+latexmk -xelatex -interaction=nonstopmode document.tex
+```</div>
+
+</div>
+
+
+</span>
+
+
+<Bibliography />

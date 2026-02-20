@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(python -m pytest:*)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "Bash(PYTHONIOENCODING=utf-8 python:*)",
+      "Bash(pip install:*)"
     ]
   }
 }
